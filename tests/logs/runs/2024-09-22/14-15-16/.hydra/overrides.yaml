@@ -1,0 +1,4 @@
+- task.task_name=create_hdf5
+- datamodule.data_dir=tests/Stereo
+- datamodule.split_csv_path=tests/Stereo/split.csv
+- datamodule.hdf5_file_path=tests/Stereo/out.hdf5

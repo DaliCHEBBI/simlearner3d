@@ -1,0 +1,12 @@
+prepare_dataset:
+  left: tests/left.txt
+  right: tests/right.txt
+  disp: tests/disp.txt
+  masq: tests/masq.txt
+  out_dir: tests/Stereo
+  data_split:
+    train: 90
+    val: 5
+    test: 5
+task:
+  task_name: prepare_dataset

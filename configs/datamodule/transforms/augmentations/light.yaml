@@ -1,0 +1,4 @@
+flip:
+  _target_: torchvision.transforms.functional.vflip
+  _args_:
+  p: 0.5

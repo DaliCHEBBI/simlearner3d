@@ -1,0 +1,87 @@
+seed: 12345
+work_dir: ${hydra:runtime.cwd}
+debug: false
+print_config: true
+ignore_warnings: true
+trainer:
+  _target_: pytorch_lightning.Trainer
+  min_epochs: 1
+  max_epochs: 1300
+  log_every_n_steps: 1
+  accelerator: cpu
+  devices: 1
+  num_nodes: 1
+datamodule:
+  transforms:
+    augmentations:
+      ClipAndComputeUsingPatchSize:
+        _target_: simlearner3d.processing.transforms.augmentations.ClipAndComputeUsingPatchSize
+        tile_height: 1024
+        patch_size: 768
+      DownScaleImage:
+        _target_: simlearner3d.processing.transforms.augmentations.DownScaleImage
+        scales:
+        - 0.125
+        - 0.25
+        - 0.5
+      VerticalFlip:
+        _target_: simlearner3d.processing.transforms.augmentations.VerticalFlip
+        p: 0.5
+    normalizations:
+      StandardizeIntensityCenterOnZero:
+        _target_: simlearner3d.processing.transforms.transforms.StandardizeIntensityCenterOnZero
+    augmentations_list: '${oc.dict.values: datamodule.transforms.augmentations}'
+    normalizations_list: '${oc.dict.values: datamodule.transforms.normalizations}'
+  _target_: simlearner3d.processing.datamodule.hdf5.HDF5StereoDataModule
+  data_dir: /home/MAChebbi/opt/simlearner3d/tests/Stereo
+  split_csv_path: /home/MAChebbi/opt/simlearner3d/tests/Stereo/split.csv
+  hdf5_file_path: /home/MAChebbi/opt/simlearner3d/tests/Stereo/out.hdf5
+  tile_width: 1024
+  tile_height: 1024
+  patch_size: 768
+  sign_disp_multiplier: -1
+  masq_divider: 255
+  subtile_width: 50
+  subtile_overlap_train: 0
+  subtile_overlap_predict: ${predict.subtile_overlap}
+  batch_size: 16
+  num_workers: 3
+  prefetch_factor: 3
+callbacks:
+  log_code:
+    _target_: simlearner3d.callbacks.comet_callbacks.LogCode
+    code_dir: ${work_dir}/simlearner3d
+  log_logs_dir:
+    _target_: simlearner3d.callbacks.comet_callbacks.LogLogsPath
+  lr_monitor:
+    _target_: pytorch_lightning.callbacks.LearningRateMonitor
+    logging_interval: step
+    log_momentum: true
+  model_checkpoint:
+    _target_: pytorch_lightning.callbacks.ModelCheckpoint
+    monitor: val/loss_epoch
+    mode: min
+    save_top_k: 1
+    save_last: true
+    verbose: true
+    dirpath: checkpoints/
+    filename: epoch_{epoch:03d}
+    auto_insert_metric_name: false
+  early_stopping:
+    _target_: pytorch_lightning.callbacks.EarlyStopping
+    monitor: val/loss_epoch
+    mode: min
+    patience: 6
+    min_delta: 0
+logger:
+  comet:
+    _target_: pytorch_lightning.loggers.comet.CometLogger
+    api_key: ${oc.env:COMET_API_TOKEN}
+    workspace: ${oc.env:COMET_WORKSPACE}
+    project_name: ${oc.env:COMET_PROJECT_NAME}
+    experiment_name: null
+    auto_log_co2: false
+    disabled: false
+task:
+  task_name: create_hdf5
+  auto_lr_find: false

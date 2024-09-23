@@ -1,0 +1,3 @@
+
+StandardizeIntensityCenterOnZero:
+  _target_: simlearner3d.processing.transforms.transforms.StandardizeIntensityCenterOnZero

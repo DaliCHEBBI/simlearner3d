@@ -1,0 +1,7 @@
+# tensorboard logger built in lightning
+
+csv:
+  _target_: pytorch_lightning.loggers.TensorBoardLogger
+  save_dir: "${hydra:run.dir}"
+  name: "tensorboard/"
+  prefix: ""
