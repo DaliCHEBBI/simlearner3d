@@ -10,7 +10,7 @@ task:
 
 logger:
   comet:
-    experiment_name: "RandLaNet-Debug-FineTune"
+    experiment_name: "MSAFF-Debug-FineTune"
 
 trainer:
   limit_train_batches: 1

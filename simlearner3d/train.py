@@ -45,7 +45,7 @@ def train(config: DictConfig) -> Trainer:
         which contains LAS files with a classification).
 
     finetune:
-        Finetunes a checkpointed neural network on a prepared dataset, which muste be specified
+        Finetunes a checkpointed neural network on a prepared dataset, which must be specified
         in config.model.ckpt_path.
         In contrast to using fit, finetuning resumes training with altered conditions. This leads to a new,
         distinct training, and training state is reset (e.g. epoch starts from 0).
@@ -53,11 +53,9 @@ def train(config: DictConfig) -> Trainer:
     Typical use case are
 
         - a different learning rate (config.model.lr) or a different scheduler (e.g. stronger config.model.lr_scheduler.patience)
-        - a different number of classes to predict, in order to e.g. specialize a base model. \
-        This is done by specifying a new config.dataset_description as well as the corresponding config.model.num_classes. \
-        for RecudeLROnPlateau scheduler). Additionnaly, a specific callback must be activated to change neural net output layer \
-        after loading its weights. See configs/experiment/RandLaNetDebugFineTune.yaml for an example.
-
+        - a different model to train on 
+        - a different loss function ...
+        
 
     Args:
         config (DictConfig): Configuration composed by Hydra.

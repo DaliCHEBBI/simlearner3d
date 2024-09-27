@@ -1,4 +1,3 @@
-flip:
-  _target_: torchvision.transforms.functional.vflip
-  _args_:
+VerticalFlip:
+  _target_: simlearner3d.processing.transforms.augmentations.VerticalFlip
   p: 0.5

@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.utils.data
 import torch.nn.functional as F
-from models.model import DecisionNetwork
+from simlearner3d.models.modules.decision_net  import DecisionNetwork
 
 class UNet(nn.Module):
     def __init__(self, in_channels=1, init_features=32):

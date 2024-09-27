@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 from torch.nn import functional as F
-from models.modules.networks_other import init_weights
+from simlearner3d.models.modules.networks_other import init_weights
 
 
 class _GridAttentionBlockND(nn.Module):

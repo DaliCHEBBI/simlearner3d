@@ -1,4 +1,0 @@
-- task.task_name=create_hdf5
-- datamodule.data_dir=/home/MAChebbi/opt/simlearner3d/tests/Stereo
-- datamodule.split_csv_path=/home/MAChebbi/opt/simlearner3d/tests/Stereo/split.csv
-- datamodule.hdf5_file_path=/home/MAChebbi/opt/simlearner3d/tests/Stereo/out.hdf5

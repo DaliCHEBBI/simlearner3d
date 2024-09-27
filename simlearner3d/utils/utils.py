@@ -185,7 +185,7 @@ class Data:
                 _right:Optional[torch.Tensor] = None,
                 _disp:Optional[torch.Tensor]  = None, 
                 _masq:Optional[torch.Tensor]  = None,
-                _xupl:Optional[int]=None,
+                _xupl:Optional[int]=0,
                      ):
         if _left is not None:
             self._left=_left

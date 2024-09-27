@@ -2,9 +2,9 @@ import torch
 import torch.nn as nn
 import torch.utils.data
 import torch.nn.functional as F
-from models.modules.decision_net import DecisionNetwork
-from models.modules.networks_other import init_weights
-from models.modules.grid_attention_layer import GridAttentionBlock2D
+from simlearner3d.models.modules.decision_net  import DecisionNetwork
+from simlearner3d.models.modules.networks_other import init_weights
+from simlearner3d.models.modules.grid_attention_layer import GridAttentionBlock2D
 
 class UnetDsv(nn.Module):
     def __init__(self, in_size, out_size):

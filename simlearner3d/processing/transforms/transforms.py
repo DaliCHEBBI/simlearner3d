@@ -45,7 +45,6 @@ class StandardizeIntensity:
         return clamped
 
 
-
 class StandardizeIntensityCenterOnZero:
     """Standardize gray scale image values."""
 

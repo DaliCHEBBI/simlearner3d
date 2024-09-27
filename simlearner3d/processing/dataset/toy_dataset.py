@@ -171,7 +171,7 @@ def populate_dataset(nb_train,
                     osp.basename(m),
                     "test"])
 
-@hydra.main(config_path="configs/dataset/", config_name="default.yaml")
+@hydra.main(config_path="../../../configs/dataset/", config_name="default.yaml")
 def prepare_dataset(config: DictConfig):#, args: typing.Sequence[str]):
     #parser=make_arg_parser()
     #args_prepare=parser.parse_args(args)

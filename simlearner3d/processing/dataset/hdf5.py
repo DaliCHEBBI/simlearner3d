@@ -105,7 +105,7 @@ class HDF5Dataset(Dataset):
             transform = self.eval_transform
         if transform:
             data = transform(data)
-        return data
+        return data._left.unsqueeze(0), data._right.unsqueeze(0),data._disp.unsqueeze(0),data._masq.unsqueeze(0),data._xupl
         #----------------------------------------------------------------------------#
 
 
@@ -129,6 +129,7 @@ class HDF5Dataset(Dataset):
             _disp=torch.from_numpy(grp["d"][...]).mul(self.sign_disp_multiplier), # do it once for all 
             _masq=torch.from_numpy(grp["m"][...]).div(self.masq_divider), # do it once for all
         )
+    
 
     def __len__(self):
         return len(self.samples_hdf5_paths)

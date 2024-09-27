@@ -131,7 +131,7 @@ class HDF5StereoDataModule(LightningDataModule):
 
         self._dataset = HDF5Dataset(
             self.hdf5_file_path,
-            images_paths_by_split_dict=self.image_paths_by_split_dict,
+            self.image_paths_by_split_dict,
             tile_width=self.tile_width,
             tile_height=self.tile_height,
             patch_size=self.patch_size,
