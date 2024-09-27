@@ -1,0 +1,18 @@
+# @package _global_
+defaults:
+  - override /datamodule/transforms/augmentations: light.yaml
+
+logger:
+  comet:
+    experiment_name: "MASFF_base_run_FR-(BatchSize10)"
+
+
+datamodule:
+  batch_size: 10
+
+trainer:
+  num_sanity_val_steps: 2
+  min_epochs: 100
+  max_epochs: 150
+  accumulate_grad_batches: 3  
+  # gpus: [1]
