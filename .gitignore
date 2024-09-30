@@ -1,0 +1,4 @@
+*.pyc
+outputs
+tests
+envir.yml
