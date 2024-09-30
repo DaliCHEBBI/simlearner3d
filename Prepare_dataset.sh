@@ -1,5 +1,5 @@
 
-DATASET_DIR="/mnt/store-lidarhd/projet-LHD/IA/MYRIA3D-SHARED-WORKSPACE/MAChebbi/DATASETS/"
+DATASET_DIR="/media/mohamedali/PAT443/DATASET_STEREO/"
 
 python simlearner3d/processing/dataset/toy_dataset.py +task.task_name="prepare_dataset" \
 prepare_dataset.left="${DATASET_DIR}eurosdr_vahingen_left_train.txt" \

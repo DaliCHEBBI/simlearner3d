@@ -16,7 +16,7 @@ neural_net_hparams: ???
 
 ## Optimization
 momentum: 0.9  # arbitrary
-monitor: "val/loss_epoch"
+monitor: "val_loss"
 
 false1: 1
 false2: 4

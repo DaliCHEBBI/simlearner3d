@@ -10,15 +10,16 @@ logger:
     disabled: true
 
 trainer:
-  limit_train_batches: 1
-  limit_val_batches: 1
-  limit_test_batches: 1
-  max_epochs: 1
-  num_sanity_val_steps: 0
+  accelerator: cpu
+  limit_train_batches: 1.0
+  limit_val_batches: 1.0
+  limit_test_batches: 1.0
+  max_epochs: 20
+  num_sanity_val_steps: 1
 
 datamodule:
   batch_size: 2
-  num_workers: 1
+  num_workers: 4
   # runtime.cwd is where application is run from e.g. where run.py is.
   hdf5_file_path: "${hydra:runtime.cwd}/tests/Stereo/out.hdf5"
 

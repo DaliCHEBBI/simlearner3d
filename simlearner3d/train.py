@@ -19,7 +19,9 @@ from pytorch_lightning import (
     Trainer,
     seed_everything,
 )
-from pytorch_lightning.loggers.logger import Logger
+
+
+from pytorch_lightning.loggers import LightningLoggerBase as Logger
 
 from simlearner3d.models.generic_model import Model
 from simlearner3d.utils import utils

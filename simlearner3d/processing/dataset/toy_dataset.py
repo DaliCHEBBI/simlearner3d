@@ -11,6 +11,7 @@ from omegaconf import DictConfig
 import csv 
 import shutil
 import secrets
+from tqdm import tqdm
 
 # to use from CLI.
 sys.path.append(osp.dirname(osp.dirname(osp.dirname(osp.dirname(__file__)))))
@@ -126,6 +127,7 @@ def populate_dataset(nb_train,
                      all_set_images,
                      _output_dir,
                      writer):
+    pbar=tqdm(total=nb_train, desc="Train split")
     while nb_train:
         a_set=(l,r,d,m)=secrets.choice(all_set_images)
         # put a_set in train folder and fill csv_file
@@ -140,7 +142,10 @@ def populate_dataset(nb_train,
                     osp.basename(m),
                     "train"])
         nb_train-=1
-        all_set_images.remove(a_set)        
+        all_set_images.remove(a_set)
+        pbar.update(1)
+    pbar.close()
+    pbar=tqdm(total=nb_val, desc="Split validation")       
     while nb_val:
         a_set=(l,r,d,m)=secrets.choice(all_set_images)
         # put a_set in train folder and fill csv_file
@@ -156,7 +161,9 @@ def populate_dataset(nb_train,
                     "val"])
         nb_val-=1
         all_set_images.remove(a_set)
-
+        pbar.update(1)
+    pbar.close()
+    pbar=tqdm(total=len(all_set_images), desc="Split test")
     # the remaining a set as test dataset
     for (l,r,d,m) in all_set_images:
         # put a_set in train folder and fill csv_file
@@ -170,6 +177,8 @@ def populate_dataset(nb_train,
                     osp.basename(d),
                     osp.basename(m),
                     "test"])
+        pbar.update(1)
+    pbar.close()
 
 @hydra.main(config_path="../../../configs/dataset/", config_name="default.yaml")
 def prepare_dataset(config: DictConfig):#, args: typing.Sequence[str]):
@@ -194,7 +203,7 @@ def prepare_dataset(config: DictConfig):#, args: typing.Sequence[str]):
     all_set_images=list(zip(_left_names,_right_names,_disp_names,_masq_names))
     # train 
     nb_train=round(split_train*len(all_set_images))
-    nb_val=round(split_val)*len(all_set_images)
+    nb_val=round(split_val*len(all_set_images)) 
 
     if os.path.isfile(_output_dir + '/split.csv'):
         with open(_output_dir + '/split.csv', 'a', newline='') as csv_split:

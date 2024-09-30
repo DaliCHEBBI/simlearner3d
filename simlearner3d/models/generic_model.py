@@ -93,14 +93,14 @@ class Model(LightningModule):
         # Forward
         FeatsL=self.feature(x0) 
         FeatsR=self.feature(x1)
-        Offset_neg=((self.false1 - self.false2) * torch.rand(dispnoc0.size()).cuda() + self.false2)
-        RandSens=torch.rand(dispnoc0.size()).cuda()
-        RandSens=((RandSens < 0.5).float()+(RandSens >= 0.5).float()*(-1.0)).cuda()
+        Offset_neg=((self.false1 - self.false2) * torch.rand(dispnoc0.size()) + self.false2)
+        RandSens=torch.rand(dispnoc0.size())
+        RandSens=((RandSens < 0.5).float()+(RandSens >= 0.5).float()*(-1.0))
         Offset_neg=Offset_neg*RandSens
         #dispnoc0=torch.nan_to_num(dispnoc0, nan=0.0)
         D_pos=dispnoc0
         D_neg=dispnoc0+Offset_neg
-        Index_X=torch.arange(0,dispnoc0.size()[-1]).cuda()
+        Index_X=torch.arange(0,dispnoc0.size()[-1])
         Index_X=Index_X.expand(dispnoc0.size()[-2],dispnoc0.size()[-1]).unsqueeze(0).unsqueeze(0).repeat_interleave(x0.size()[0],0)
         #print("INDEX SHAPE   ",Index_X.shape )
         # ADD OFFSET
@@ -109,8 +109,8 @@ class Model(LightningModule):
         Offp=Index_X-D_pos.round()  
         Offn=Index_X-D_neg.round() 
         # Clean Indexes so there is no overhead 
-        MaskOffPositive=((Offp>=0)*(Offp<FeatsR.size()[-1])).float().cuda()
-        MaskOffNegative=((Offn>=0)*(Offn<FeatsR.size()[-1])).float().cuda()
+        MaskOffPositive=((Offp>=0)*(Offp<FeatsR.size()[-1])).float()
+        MaskOffNegative=((Offn>=0)*(Offn<FeatsR.size()[-1])).float()
         # Cleaned Offp and Offn
         Offp=(Offp*MaskOffPositive).to(torch.int64)
         Offn=(Offn*MaskOffNegative).to(torch.int64)
@@ -134,7 +134,7 @@ class Model(LightningModule):
             ref_pos=self.decisionNet(torch.cat((FeatsL,FeatsR_plus),1))
             ref_neg=self.decisionNet(torch.cat((FeatsL,FeatsR_minus),1))
             sample = torch.cat((ref_pos, ref_neg), dim=0)
-            target = torch.cat((torch.ones(x0.size()).cuda()-OCCLUDED.float(), torch.zeros(x0.size()).cuda()), dim=0)
+            target = torch.cat((torch.ones(x0.size())-OCCLUDED.float(), torch.zeros(x0.size())), dim=0)
             training_loss=self.criterion(sample+1e-20, target)*torch.cat((MaskGlobP,MaskGlobN),0)
 
         training_loss=training_loss.sum().div(MaskGlobP.count_nonzero()+MaskGlobN.count_nonzero()+1e-12)
@@ -161,14 +161,14 @@ class Model(LightningModule):
         # Forward
         FeatsL=self.feature(x0) 
         FeatsR=self.feature(x1)
-        Offset_neg=((self.false1 - self.false2) * torch.rand(dispnoc0.size()).cuda() + self.false2)
-        RandSens=torch.rand(dispnoc0.size()).cuda()
-        RandSens=((RandSens < 0.5).float()+(RandSens >= 0.5).float()*(-1.0)).cuda()
+        Offset_neg=((self.false1 - self.false2) * torch.rand(dispnoc0.size()) + self.false2)
+        RandSens=torch.rand(dispnoc0.size())
+        RandSens=((RandSens < 0.5).float()+(RandSens >= 0.5).float()*(-1.0))
         Offset_neg=Offset_neg*RandSens
         #dispnoc0=torch.nan_to_num(dispnoc0, nan=0.0)
         D_pos=dispnoc0
         D_neg=dispnoc0+Offset_neg
-        Index_X=torch.arange(0,dispnoc0.size()[-1]).cuda()
+        Index_X=torch.arange(0,dispnoc0.size()[-1])
         Index_X=Index_X.expand(dispnoc0.size()[-2],dispnoc0.size()[-1]).unsqueeze(0).unsqueeze(0).repeat_interleave(x0.size()[0],0)
         #print("INDEX SHAPE   ",Index_X.shape )
         # ADD OFFSET
@@ -177,8 +177,8 @@ class Model(LightningModule):
         Offp=Index_X-D_pos.round()  
         Offn=Index_X-D_neg.round() 
         # Clean Indexes so there is no overhead 
-        MaskOffPositive=((Offp>=0)*(Offp<FeatsR.size()[-1])).float().cuda()
-        MaskOffNegative=((Offn>=0)*(Offn<FeatsR.size()[-1])).float().cuda()
+        MaskOffPositive=((Offp>=0)*(Offp<FeatsR.size()[-1])).float()
+        MaskOffNegative=((Offn>=0)*(Offn<FeatsR.size()[-1])).float()
         # Cleaned Offp and Offn
         Offp=(Offp*MaskOffPositive).to(torch.int64)
         Offn=(Offn*MaskOffNegative).to(torch.int64)
@@ -201,7 +201,7 @@ class Model(LightningModule):
             ref_pos=self.decisionNet(torch.cat((FeatsL,FeatsR_plus),1))
             ref_neg=self.decisionNet(torch.cat((FeatsL,FeatsR_minus),1))
             sample = torch.cat((ref_pos, ref_neg), dim=0)
-            target = torch.cat((torch.ones(x0.size()).cuda()-OCCLUDED.float(), torch.zeros(x0.size()).cuda()), dim=0)
+            target = torch.cat((torch.ones(x0.size())-OCCLUDED.float(), torch.zeros(x0.size())), dim=0)
             validation_loss=self.criterion(sample+1e-20, target)*torch.cat((MaskGlobP,MaskGlobN),0)
 
         validation_loss=validation_loss.sum().div(MaskGlobP.count_nonzero()
@@ -217,12 +217,6 @@ class Model(LightningModule):
     
     def test_step(self,batch,batch_idx: int):
         x0,x1,dispnoc0,Mask0,x_offset=batch
-
-        print(x0.shape)
-        print(x1.shape)
-        print(dispnoc0.shape)
-        print(Mask0.shape)
-
         MaskDef=dispnoc0!=0.0
         # ADD DIM 1
         #dispnoc0=dispnoc0.unsqueeze(1)
@@ -235,14 +229,14 @@ class Model(LightningModule):
         # Forward
         FeatsL=self.feature(x0) 
         FeatsR=self.feature(x1)
-        Offset_neg=((self.false1 - self.false2) * torch.rand(dispnoc0.size()).cuda() + self.false2)
-        RandSens=torch.rand(dispnoc0.size()).cuda()
-        RandSens=((RandSens < 0.5).float()+(RandSens >= 0.5).float()*(-1.0)).cuda()
+        Offset_neg=((self.false1 - self.false2) * torch.rand(dispnoc0.size()) + self.false2)
+        RandSens=torch.rand(dispnoc0.size())
+        RandSens=((RandSens < 0.5).float()+(RandSens >= 0.5).float()*(-1.0))
         Offset_neg=Offset_neg*RandSens
         #dispnoc0=torch.nan_to_num(dispnoc0, nan=0.0)
         D_pos=dispnoc0
         D_neg=dispnoc0+Offset_neg
-        Index_X=torch.arange(0,dispnoc0.size()[-1]).cuda()
+        Index_X=torch.arange(0,dispnoc0.size()[-1])
         Index_X=Index_X.expand(dispnoc0.size()[-2],dispnoc0.size()[-1]).unsqueeze(0).unsqueeze(0).repeat_interleave(x0.size()[0],0)
         #print("INDEX SHAPE   ",Index_X.shape )
         # ADD OFFSET
@@ -251,8 +245,8 @@ class Model(LightningModule):
         Offp=Index_X-D_pos.round()  
         Offn=Index_X-D_neg.round() 
         # Clean Indexes so there is no overhead 
-        MaskOffPositive=((Offp>=0)*(Offp<FeatsR.size()[-1])).float().cuda()
-        MaskOffNegative=((Offn>=0)*(Offn<FeatsR.size()[-1])).float().cuda()
+        MaskOffPositive=((Offp>=0)*(Offp<FeatsR.size()[-1])).float()
+        MaskOffNegative=((Offn>=0)*(Offn<FeatsR.size()[-1])).float()
         # Cleaned Offp and Offn
         Offp=(Offp*MaskOffPositive).to(torch.int64)
         Offn=(Offn*MaskOffNegative).to(torch.int64)
@@ -275,7 +269,7 @@ class Model(LightningModule):
             ref_pos=self.decisionNet(torch.cat((FeatsL,FeatsR_plus),1))
             ref_neg=self.decisionNet(torch.cat((FeatsL,FeatsR_minus),1))
             sample = torch.cat((ref_pos, ref_neg), dim=0)
-            target = torch.cat((torch.ones(x0.size()).cuda()-OCCLUDED.float(), torch.zeros(x0.size()).cuda()), dim=0)
+            target = torch.cat((torch.ones(x0.size())-OCCLUDED.float(), torch.zeros(x0.size())), dim=0)
             test_loss=self.criterion(sample+1e-20, target)*torch.cat((MaskGlobP,MaskGlobN),0)
 
         test_loss=test_loss.sum().div(MaskGlobP.count_nonzero()

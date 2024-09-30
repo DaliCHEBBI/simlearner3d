@@ -250,7 +250,7 @@ def create_hdf5(
                     os.path.join(hdf5_path, "r"),
                     data._right.shape,
                     dtype="f",
-                    data=data._left,
+                    data=data._right,
                 )
                 hdf5_file.create_dataset(
                     os.path.join(hdf5_path, "d"),

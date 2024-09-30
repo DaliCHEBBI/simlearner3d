@@ -5,9 +5,9 @@ class MaskedTripletLoss:
     def __init__(self,margin=0.3):
         self.margin=margin
     def compute_loss(self,anchor, positive, negative,occlusion_masq):
-        return torch.max(F.cosine_similarity(anchor,negative)
+        return torch.clamp_min(F.cosine_similarity(anchor,negative)
                                    - F.cosine_similarity(anchor,positive)
-                                   +self.margin,0).mul(torch.logical_not(occlusion_masq))+torch.max(
+                                   +self.margin,0).mul(torch.logical_not(occlusion_masq))+torch.clamp_min(
                                        F.cosine_similarity(anchor,negative)
                                         + F.cosine_similarity(anchor,positive)
                                         ,0).mul(occlusion_masq)
