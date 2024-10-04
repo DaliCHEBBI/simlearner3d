@@ -1,0 +1,133 @@
+CONFIG
+├── task
+│   └── task_name: fit                                                                                                                                                                                      
+│       auto_lr_find: false                                                                                                                                                                                 
+│                                                                                                                                                                                                           
+├── seed
+│   └── 12345                                                                                                                                                                                               
+├── logger
+│   └── comet:                                                                                                                                                                                              
+│         _target_: pytorch_lightning.loggers.comet.CometLogger                                                                                                                                             
+│         api_key: ${oc.env:COMET_API_TOKEN}                                                                                                                                                                
+│         workspace: ${oc.env:COMET_WORKSPACE}                                                                                                                                                              
+│         project_name: ${oc.env:COMET_PROJECT_NAME}                                                                                                                                                        
+│         experiment_name: MSAFF_COSINE                                                                                                                                                                     
+│         auto_log_co2: false                                                                                                                                                                               
+│         disabled: true                                                                                                                                                                                    
+│                                                                                                                                                                                                           
+├── trainer
+│   └── _target_: pytorch_lightning.Trainer                                                                                                                                                                 
+│       min_epochs: 1                                                                                                                                                                                       
+│       max_epochs: 20                                                                                                                                                                                      
+│       log_every_n_steps: 1                                                                                                                                                                                
+│       accelerator: cpu                                                                                                                                                                                    
+│       devices: 1                                                                                                                                                                                          
+│       num_nodes: 1                                                                                                                                                                                        
+│       limit_train_batches: 1.0                                                                                                                                                                            
+│       limit_val_batches: 1.0                                                                                                                                                                              
+│       limit_test_batches: 1.0                                                                                                                                                                             
+│       num_sanity_val_steps: 1                                                                                                                                                                             
+│                                                                                                                                                                                                           
+├── model
+│   └── optimizer:                                                                                                                                                                                          
+│         _target_: functools.partial                                                                                                                                                                       
+│         _args_:                                                                                                                                                                                           
+│         - ${get_method:torch.optim.Adam}                                                                                                                                                                  
+│         lr: ${model.lr}                                                                                                                                                                                   
+│       lr_scheduler:                                                                                                                                                                                       
+│         _target_: functools.partial                                                                                                                                                                       
+│         _args_:                                                                                                                                                                                           
+│         - ${get_method:torch.optim.lr_scheduler.ReduceLROnPlateau}                                                                                                                                        
+│         mode: min                                                                                                                                                                                         
+│         factor: 0.5                                                                                                                                                                                       
+│         patience: 20                                                                                                                                                                                      
+│         cooldown: 5                                                                                                                                                                                       
+│         verbose: true                                                                                                                                                                                     
+│       criterion:                                                                                                                                                                                          
+│         _target_: simlearner3d.models.criterion.masked_triplet_loss.MaskedTripletLoss                                                                                                                     
+│         margin: 0.3                                                                                                                                                                                       
+│       _target_: simlearner3d.models.generic_model.Model                                                                                                                                                   
+│       ckpt_path: null                                                                                                                                                                                     
+│       neural_net_class_name: MSNet                                                                                                                                                                        
+│       neural_net_hparams:                                                                                                                                                                                 
+│         Inplanes: 32                                                                                                                                                                                      
+│       momentum: 0.9                                                                                                                                                                                       
+│       monitor: val_loss                                                                                                                                                                                   
+│       false1: 1                                                                                                                                                                                           
+│       false2: 4                                                                                                                                                                                           
+│       learning_rate: 0.001                                                                                                                                                                                
+│       mode: feature                                                                                                                                                                                       
+│       lr: 0.003933709606504788                                                                                                                                                                            
+│                                                                                                                                                                                                           
+├── datamodule
+│   └── transforms:                                                                                                                                                                                         
+│         augmentations:                                                                                                                                                                                    
+│           ClipAndComputeUsingPatchSize:                                                                                                                                                                   
+│             _target_: simlearner3d.processing.transforms.augmentations.ClipAndComputeUsingPatchSize                                                                                                       
+│             tile_height: 1024                                                                                                                                                                             
+│             patch_size: 768                                                                                                                                                                               
+│           DownScaleImage:                                                                                                                                                                                 
+│             _target_: simlearner3d.processing.transforms.augmentations.DownScaleImage                                                                                                                     
+│             scales:                                                                                                                                                                                       
+│             - 0.125                                                                                                                                                                                       
+│             - 0.25                                                                                                                                                                                        
+│             - 0.5                                                                                                                                                                                         
+│           VerticalFlip:                                                                                                                                                                                   
+│             _target_: simlearner3d.processing.transforms.augmentations.VerticalFlip                                                                                                                       
+│             p: 0.5                                                                                                                                                                                        
+│         normalizations:                                                                                                                                                                                   
+│           StandardizeIntensityCenterOnZero:                                                                                                                                                               
+│             _target_: simlearner3d.processing.transforms.transforms.StandardizeIntensityCenterOnZero                                                                                                      
+│         augmentations_list: '${oc.dict.values: datamodule.transforms.augmentations}'                                                                                                                      
+│         normalizations_list: '${oc.dict.values: datamodule.transforms.normalizations}'                                                                                                                    
+│       _target_: simlearner3d.processing.datamodule.hdf5.HDF5StereoDataModule                                                                                                                              
+│       data_dir: null                                                                                                                                                                                      
+│       split_csv_path: null                                                                                                                                                                                
+│       hdf5_file_path: /media/mohamedali/PAT443/DATASET_STEREO/Stereo/eurosdr.hdf5                                                                                                                         
+│       images_pre_transform:                                                                                                                                                                               
+│         _target_: functools.partial                                                                                                                                                                       
+│         _args_:                                                                                                                                                                                           
+│         - ${get_method:simlearner3d.processing.dataset.utils.read_images_and_create_full_data_obj}                                                                                                        
+│       tile_width: 1024                                                                                                                                                                                    
+│       tile_height: 1024                                                                                                                                                                                   
+│       patch_size: 768                                                                                                                                                                                     
+│       sign_disp_multiplier: -1                                                                                                                                                                            
+│       masq_divider: 1                                                                                                                                                                                     
+│       subtile_width: 50                                                                                                                                                                                   
+│       subtile_overlap_train: 0                                                                                                                                                                            
+│       subtile_overlap_predict: 0                                                                                                                                                                          
+│       batch_size: 2                                                                                                                                                                                       
+│       num_workers: 4                                                                                                                                                                                      
+│       prefetch_factor: 3                                                                                                                                                                                  
+│                                                                                                                                                                                                           
+├── dataset_description
+│   └── None                                                                                                                                                                                                
+├── callbacks
+│   └── log_code:                                                                                                                                                                                           
+│         _target_: simlearner3d.callbacks.comet_callbacks.LogCode                                                                                                                                          
+│         code_dir: ${work_dir}/simlearner3d                                                                                                                                                                
+│       log_logs_dir:                                                                                                                                                                                       
+│         _target_: simlearner3d.callbacks.comet_callbacks.LogLogsPath                                                                                                                                      
+│       lr_monitor:                                                                                                                                                                                         
+│         _target_: pytorch_lightning.callbacks.LearningRateMonitor                                                                                                                                         
+│         logging_interval: step                                                                                                                                                                            
+│         log_momentum: true                                                                                                                                                                                
+│       model_checkpoint:                                                                                                                                                                                   
+│         _target_: pytorch_lightning.callbacks.ModelCheckpoint                                                                                                                                             
+│         monitor: val_loss                                                                                                                                                                                 
+│         mode: min                                                                                                                                                                                         
+│         save_top_k: 1                                                                                                                                                                                     
+│         save_last: true                                                                                                                                                                                   
+│         verbose: true                                                                                                                                                                                     
+│         dirpath: checkpoints/                                                                                                                                                                             
+│         filename: epoch_{epoch:03d}                                                                                                                                                                       
+│         auto_insert_metric_name: false                                                                                                                                                                    
+│       early_stopping:                                                                                                                                                                                     
+│         _target_: pytorch_lightning.callbacks.EarlyStopping                                                                                                                                               
+│         monitor: val_loss                                                                                                                                                                                 
+│         mode: min                                                                                                                                                                                         
+│         patience: 6                                                                                                                                                                                       
+│         min_delta: 0                                                                                                                                                                                      
+│                                                                                                                                                                                                           
+└── predict
+    └── None                                                                                                                                                                                                
