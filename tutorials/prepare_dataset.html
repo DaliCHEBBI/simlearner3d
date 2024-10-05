@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Preparing data for training &mdash; simlearner3d 3.8.4 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/sphinx_paramlinks.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Performing inference on new data" href="make_predictions.html" />
+    <link rel="prev" title="Install Simlearner3d on WSL2 with CUDA support" href="install_on_wsl2.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> simlearner3d
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install_on_linux.html">Install Simlearner3D on Linux</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="install_on_linux.html#setting-up-a-virtual-environment">Setting up a virtual environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install_on_linux.html#install-source-as-a-package">Install source as a package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install_on_linux.html#troubleshooting">Troubleshooting</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="install_on_wsl2.html">Install Simlearner3d on WSL2 with CUDA support</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="install_on_wsl2.html#setting-up-wsl2">Setting up WSL2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install_on_wsl2.html#installing-anaconda">Installing Anaconda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install_on_wsl2.html#installing-simlearner3d">Installing Simlearner3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install_on_wsl2.html#troubleshooting">Troubleshooting</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Preparing data for training</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#peprocessing-functions">Peprocessing functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#creating-train-val-test-split-dataset-and-split-csv">Creating Train/Val/Test split dataset and split.csv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#create-a-hdf5-dataset">Create a HDF5 Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#getting-started-quickly-with-a-toy-dataset">Getting started quickly with a toy dataset</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="make_predictions.html">Performing inference on new data</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="make_predictions.html#transforming-ckpt-model-to-scripted-pt-models">Transforming .ckpt model to scripted .pt models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="make_predictions.html#run-inference-from-source">Run inference from source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="make_predictions.html#run-inference-from-sources">Run inference from sources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="make_predictions.html#run-inference-from-within-a-docker-image">Run inference from within a docker image</a></li>
+<li class="toctree-l2"><a class="reference internal" href="make_predictions.html#additional-options-for-prediction">Additional options for prediction</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Guides</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guides/train_new_model.html">How to train new models</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../guides/train_new_model.html#setup">Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/train_new_model.html#quick-run">Quick run</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/train_new_model.html#training">Training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/train_new_model.html#testing-the-model">Testing the model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/train_new_model.html#inference">Inference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/development.html">Developer’s guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../guides/development.html#code-versionning">Code versionning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/development.html#tests">Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/development.html#continuous-integration-ci">Continuous Integration (CI)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/development.html#continuous-delivery-cd">Continuous Delivery (CD)</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Background</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../background/interpolation.html">KNN-Interpolation to merge multiple predictions [TODO]</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../background/general_design.html">General design of the package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../background/general_design.html#model-should-be-fast-performant-and-practical">Model should be fast, performant, and practical</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../background/general_design.html#subsampling-is-important-to-improve-point-cloud-structure">Subsampling is important to improve point cloud structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../background/general_design.html#speed-is-of-the-essence">Speed is of the essence</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../background/general_design.html#evaluation-is-key-to-select-the-right-approach">Evaluation is key to select the right approach</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Package Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../apidoc/scripts.html">Scripts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../apidoc/scripts.html#module-run">run</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apidoc/scripts.html#module-simlearner3d.train">simlearner3d.train</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../apidoc/configs.html">Default configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../apidoc/simlearner3d.processing.html">simlearner3d.processing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../apidoc/simlearner3d.processing.html#module-simlearner3d.processing.datamodule.hdf5">simlearner3d.processing.datamodule.hdf5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apidoc/simlearner3d.processing.html#module-simlearner3d.processing.dataset.hdf5">simlearner3d.processing.dataset.hdf5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apidoc/simlearner3d.processing.html#module-simlearner3d.processing.dataset.toy_dataset">simlearner3d.processing.dataset.toy_dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apidoc/simlearner3d.processing.html#module-simlearner3d.processing.dataset.utils">simlearner3d.processing.dataset.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apidoc/simlearner3d.processing.html#module-simlearner3d.processing.transforms.compose">simlearner3d.processing.transforms.compose</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apidoc/simlearner3d.processing.html#module-simlearner3d.processing.transforms.transforms">simlearner3d.processing.transforms.transforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apidoc/simlearner3d.processing.html#simlearner3d-processing-transforms-augmentations">simlearner3d.processing.transforms.augmentations</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../apidoc/simlearner3d.model.html">simlearner3d.models</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../apidoc/simlearner3d.model.html#module-simlearner3d.models.generic_model">Model</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../apidoc/simlearner3d.models.modules.html">simlearner3d.models.modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../apidoc/simlearner3d.models.modules.html#msaff-unet32-unet-attention">MSAFF - Unet32 - Unet Attention</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../apidoc/simlearner3d.callbacks.html">simlearner3d.callbacks</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../apidoc/simlearner3d.callbacks.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apidoc/simlearner3d.callbacks.html#module-simlearner3d.callbacks.comet_callbacks">simlearner3d.callbacks.comet_callbacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apidoc/simlearner3d.callbacks.html#module-simlearner3d.callbacks.finetuning_callbacks">simlearner3d.callbacks.finetuning_callbacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apidoc/simlearner3d.callbacks.html#simlearner3d-callbacks-logging-callbacks">simlearner3d.callbacks.logging_callbacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apidoc/simlearner3d.callbacks.html#module-simlearner3d.callbacks">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../apidoc/simlearner3d.utils.html">simlearner3d.utils</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../apidoc/simlearner3d.utils.html#module-simlearner3d.utils.utils">simlearner3d.utils.utils</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">simlearner3d</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Preparing data for training</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/tutorials/prepare_dataset.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="preparing-data-for-training">
+<h1>Preparing data for training<a class="headerlink" href="#preparing-data-for-training" title="Permalink to this headline"></a></h1>
+<section id="peprocessing-functions">
+<h2>Peprocessing functions<a class="headerlink" href="#peprocessing-functions" title="Permalink to this headline"></a></h2>
+<p>The loading function is <code class="docutils literal notranslate"><span class="pre">lread_images_and_create_full_data_obj</span></code> by default. It takes <code class="docutils literal notranslate"><span class="pre">image_paths</span></code> which a quadruplet of  <code class="docutils literal notranslate"><span class="pre">left</span></code>, <code class="docutils literal notranslate"><span class="pre">right</span></code>, <code class="docutils literal notranslate"><span class="pre">disparity</span></code> and <code class="docutils literal notranslate"><span class="pre">occlusion_mask</span></code> image names and generates a <code class="docutils literal notranslate"><span class="pre">Data</span></code> object <code class="docutils literal notranslate"><span class="pre">simlearner3d.utils.utils.Data</span></code> which is simply a set of <code class="docutils literal notranslate"><span class="pre">torch.Tensor</span></code> representations of the image set.</p>
+</section>
+<section id="creating-train-val-test-split-dataset-and-split-csv">
+<h2>Creating Train/Val/Test split dataset and split.csv<a class="headerlink" href="#creating-train-val-test-split-dataset-and-split-csv" title="Permalink to this headline"></a></h2>
+<p>To create the famous folder of sub sets arranged as Train, Val and Test, we use <code class="docutils literal notranslate"><span class="pre">task.task_name=&quot;prepare_dataset&quot;</span></code> which takes files:</p>
+<ul class="simple">
+<li><p>Item left <code class="docutils literal notranslate"><span class="pre">full</span> <span class="pre">path</span></code> image names</p></li>
+<li><p>Item right <code class="docutils literal notranslate"><span class="pre">full</span> <span class="pre">path</span></code> images names</p></li>
+<li><p>Item disparity <code class="docutils literal notranslate"><span class="pre">full</span> <span class="pre">path</span></code> images names</p></li>
+<li><p>Item occlusion masks <code class="docutils literal notranslate"><span class="pre">full</span> <span class="pre">path</span></code> images names</p></li>
+</ul>
+<p>Here is an example of a command that create <code class="docutils literal notranslate"><span class="pre">Stereo</span></code> folder with samples distributed as Train, Val or Test</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">DATASET_DIR</span><span class="o">=</span><span class="s2">&quot;/path/to/images/disparities/maks/sets/of/files&quot;</span>
+python<span class="w"> </span>simlearner3d/processing/dataset/toy_dataset.py<span class="w"> </span>+task.task_name<span class="o">=</span><span class="s2">&quot;prepare_dataset&quot;</span><span class="w"> </span><span class="se">\</span>
+prepare_dataset.left<span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">DATASET_DIR</span><span class="si">}</span><span class="s2">eurosdr_vahingen_left_train.txt&quot;</span><span class="w"> </span><span class="se">\</span>
+prepare_dataset.right<span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">DATASET_DIR</span><span class="si">}</span><span class="s2">eurosdr_vahingen_right_train.txt&quot;</span><span class="w"> </span><span class="se">\</span>
+prepare_dataset.disp<span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">DATASET_DIR</span><span class="si">}</span><span class="s2">eurosdr_vahingen_disp_train.txt&quot;</span><span class="w"> </span><span class="se">\</span>
+prepare_dataset.masq<span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">DATASET_DIR</span><span class="si">}</span><span class="s2">eurosdr_vahingen_masq_train.txt&quot;</span><span class="w"> </span><span class="se">\</span>
+prepare_dataset.out_dir<span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">DATASET_DIR</span><span class="si">}</span><span class="s2">Stereo&quot;</span>
+</pre></div>
+</div>
+<p>The resulting <code class="docutils literal notranslate"><span class="pre">Stereo</span></code> folder contains the following sub folders:</p>
+<ul class="simple">
+<li><p>Item train/</p></li>
+<li><p>Item val/</p></li>
+<li><p>Item test/</p></li>
+</ul>
+<p>It additionally contains a <code class="docutils literal notranslate"><span class="pre">split.csv</span></code> file that tells which quadruplet of images (left, right, disparity, mask) belongs to which subset (train,val,test)</p>
+<p>Here is an example of split.csv content</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">basename_l</span><span class="p">,</span><span class="n">basename_r</span><span class="p">,</span><span class="n">disparity</span><span class="p">,</span><span class="n">masq</span><span class="p">,</span><span class="n">split</span>
+<span class="n">DMTrain_SDR</span><span class="o">-</span><span class="mi">05_20_0003</span><span class="n">_Im1</span><span class="o">.</span><span class="n">tif</span><span class="p">,</span><span class="n">DMTrain_SDR</span><span class="o">-</span><span class="mi">05_20_0003</span><span class="n">_Im2</span><span class="o">.</span><span class="n">tif</span><span class="p">,</span><span class="n">DensifyPx_DMTrain_SDR</span><span class="o">-</span><span class="mi">05_20_0003</span><span class="n">_Im1</span><span class="o">.</span><span class="n">tif</span><span class="p">,</span><span class="n">Nocc_refine_DensifyPx_DMTrain_SDR</span><span class="o">-</span><span class="mi">05_20_0003</span><span class="n">_Im1</span><span class="o">.</span><span class="n">tif</span><span class="p">,</span><span class="n">train</span>
+<span class="n">DMTrain_SDR</span><span class="o">-</span><span class="mi">20_30_0002</span><span class="n">_Im1</span><span class="o">.</span><span class="n">tif</span><span class="p">,</span><span class="n">DMTrain_SDR</span><span class="o">-</span><span class="mi">20_30_0002</span><span class="n">_Im2</span><span class="o">.</span><span class="n">tif</span><span class="p">,</span><span class="n">DensifyPx_DMTrain_SDR</span><span class="o">-</span><span class="mi">20_30_0002</span><span class="n">_Im1</span><span class="o">.</span><span class="n">tif</span><span class="p">,</span><span class="n">Nocc_refine_DensifyPx_DMTrain_SDR</span><span class="o">-</span><span class="mi">20_30_0002</span><span class="n">_Im1</span><span class="o">.</span><span class="n">tif</span><span class="p">,</span><span class="n">train</span>
+<span class="n">DMTrain_SDR</span><span class="o">-</span><span class="mi">06_20_0001</span><span class="n">_Im1</span><span class="o">.</span><span class="n">tif</span><span class="p">,</span><span class="n">DMTrain_SDR</span><span class="o">-</span><span class="mi">06_20_0001</span><span class="n">_Im2</span><span class="o">.</span><span class="n">tif</span><span class="p">,</span><span class="n">DensifyPx_DMTrain_SDR</span><span class="o">-</span><span class="mi">06_20_0001</span><span class="n">_Im1</span><span class="o">.</span><span class="n">tif</span><span class="p">,</span><span class="n">Nocc_refine_DensifyPx_DMTrain_SDR</span><span class="o">-</span><span class="mi">06_20_0001</span><span class="n">_Im1</span><span class="o">.</span><span class="n">tif</span><span class="p">,</span><span class="n">train</span>
+<span class="n">DMTrain_SDR</span><span class="o">-</span><span class="mi">05_20_0006</span><span class="n">_Im1</span><span class="o">.</span><span class="n">tif</span><span class="p">,</span><span class="n">DMTrain_SDR</span><span class="o">-</span><span class="mi">05_20_0006</span><span class="n">_Im2</span><span class="o">.</span><span class="n">tif</span><span class="p">,</span><span class="n">DensifyPx_DMTrain_SDR</span><span class="o">-</span><span class="mi">05_20_0006</span><span class="n">_Im1</span><span class="o">.</span><span class="n">tif</span><span class="p">,</span><span class="n">Nocc_refine_DensifyPx_DMTrain_SDR</span><span class="o">-</span><span class="mi">05_20_0006</span><span class="n">_Im1</span><span class="o">.</span><span class="n">tif</span><span class="p">,</span><span class="n">train</span>
+<span class="n">DMTrain_SDR</span><span class="o">-</span><span class="mi">05_21_0014</span><span class="n">_Im1</span><span class="o">.</span><span class="n">tif</span><span class="p">,</span><span class="n">DMTrain_SDR</span><span class="o">-</span><span class="mi">05_21_0014</span><span class="n">_Im2</span><span class="o">.</span><span class="n">tif</span><span class="p">,</span><span class="n">DensifyPx_DMTrain_SDR</span><span class="o">-</span><span class="mi">05_21_0014</span><span class="n">_Im1</span><span class="o">.</span><span class="n">tif</span><span class="p">,</span><span class="n">Nocc_refine_DensifyPx_DMTrain_SDR</span><span class="o">-</span><span class="mi">05_21_0014</span><span class="n">_Im1</span><span class="o">.</span><span class="n">tif</span><span class="p">,</span><span class="n">train</span>
+<span class="n">DMTrain_SDR</span><span class="o">-</span><span class="mi">05_19_0017</span><span class="n">_Im1</span><span class="o">.</span><span class="n">tif</span><span class="p">,</span><span class="n">DMTrain_SDR</span><span class="o">-</span><span class="mi">05_19_0017</span><span class="n">_Im2</span><span class="o">.</span><span class="n">tif</span><span class="p">,</span><span class="n">DensifyPx_DMTrain_SDR</span><span class="o">-</span><span class="mi">05_19_0017</span><span class="n">_Im1</span><span class="o">.</span><span class="n">tif</span><span class="p">,</span><span class="n">Nocc_refine_DensifyPx_DMTrain_SDR</span><span class="o">-</span><span class="mi">05_19_0017</span><span class="n">_Im1</span><span class="o">.</span><span class="n">tif</span><span class="p">,</span><span class="n">train</span>
+<span class="n">DMTrain_SDR</span><span class="o">-</span><span class="mi">04_29_0005</span><span class="n">_Im1</span><span class="o">.</span><span class="n">tif</span><span class="p">,</span><span class="n">DMTrain_SDR</span><span class="o">-</span><span class="mi">04_29_0005</span><span class="n">_Im2</span><span class="o">.</span><span class="n">tif</span><span class="p">,</span><span class="n">DensifyPx_DMTrain_SDR</span><span class="o">-</span><span class="mi">04_29_0005</span><span class="n">_Im1</span><span class="o">.</span><span class="n">tif</span><span class="p">,</span><span class="n">Nocc_refine_DensifyPx_DMTrain_SDR</span><span class="o">-</span><span class="mi">04_29_0005</span><span class="n">_Im1</span><span class="o">.</span><span class="n">tif</span><span class="p">,</span><span class="n">train</span>
+<span class="n">DMTrain_SDR</span><span class="o">-</span><span class="mi">05_21_0004</span><span class="n">_Im1</span><span class="o">.</span><span class="n">tif</span><span class="p">,</span><span class="n">DMTrain_SDR</span><span class="o">-</span><span class="mi">05_21_0004</span><span class="n">_Im2</span><span class="o">.</span><span class="n">tif</span><span class="p">,</span><span class="n">DensifyPx_DMTrain_SDR</span><span class="o">-</span><span class="mi">05_21_0004</span><span class="n">_Im1</span><span class="o">.</span><span class="n">tif</span><span class="p">,</span><span class="n">Nocc_refine_DensifyPx_DMTrain_SDR</span><span class="o">-</span><span class="mi">05_21_0004</span><span class="n">_Im1</span><span class="o">.</span><span class="n">tif</span><span class="p">,</span><span class="n">train</span>
+<span class="n">DMTrain_SDR</span><span class="o">-</span><span class="mi">07_18_0011</span><span class="n">_Im1</span><span class="o">.</span><span class="n">tif</span><span class="p">,</span><span class="n">DMTrain_SDR</span><span class="o">-</span><span class="mi">07_18_0011</span><span class="n">_Im2</span><span class="o">.</span><span class="n">tif</span><span class="p">,</span><span class="n">DensifyPx_DMTrain_SDR</span><span class="o">-</span><span class="mi">07_18_0011</span><span class="n">_Im1</span><span class="o">.</span><span class="n">tif</span><span class="p">,</span><span class="n">Nocc_refine_DensifyPx_DMTrain_SDR</span><span class="o">-</span><span class="mi">07_18_0011</span><span class="n">_Im1</span><span class="o">.</span><span class="n">tif</span><span class="p">,</span><span class="n">train</span>
+</pre></div>
+</div>
+<p>If you have an additional dataset with left, right, disparity and masks files, you can apprend this set to the previous one by re-running the same command with the new files and keeping <code class="docutils literal notranslate"><span class="pre">prepare_dataset.out_dir</span></code> the same so that they could be split and appended to the previous subset.</p>
+</section>
+<section id="create-a-hdf5-dataset">
+<h2>Create a HDF5 Dataset<a class="headerlink" href="#create-a-hdf5-dataset" title="Permalink to this headline"></a></h2>
+<p>After generating the sub splits of a dataset (train/val/test) and their subsequent split.scv file, we can generate an overall hdf5 file that encapsulates all the dataset into one file thus reducing training times. To do that, you can run the following command line which takes the following arguments:</p>
+<ul class="simple">
+<li><p>Item <code class="docutils literal notranslate"><span class="pre">datamodule.data_dir</span></code>: The directory where train,val,test folders exist</p></li>
+<li><p>Item <code class="docutils literal notranslate"><span class="pre">datamodule.split_csv_path</span></code>: the split.csv split file full path</p></li>
+<li><p>Item <code class="docutils literal notranslate"><span class="pre">datamodule.hdf5_file_path</span></code>: the to-generate hdf5 file full path</p></li>
+</ul>
+<p>Here is an example:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">DATASET_DIR</span><span class="o">=</span><span class="s2">&quot;/path/to/images/disparities/maks/sets/of/files&quot;</span>
+python<span class="w"> </span>run.py<span class="w"> </span>task.task_name<span class="o">=</span>create_hdf5<span class="w"> </span><span class="se">\</span>
+datamodule.data_dir<span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="p">{DATASET_DIR</span><span class="si">}</span><span class="s2">}Stereo&quot;</span><span class="w"> </span><span class="se">\</span>
+datamodule.split_csv_path<span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="p">{DATASET_DIR</span><span class="si">}</span><span class="s2">}Stereo/split.csv&quot;</span><span class="w"> </span><span class="se">\</span>
+datamodule.hdf5_file_path<span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">DATASET_DIR</span><span class="si">}</span><span class="s2">Stereo/eurosdr.hdf5&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="getting-started-quickly-with-a-toy-dataset">
+<h2>Getting started quickly with a toy dataset<a class="headerlink" href="#getting-started-quickly-with-a-toy-dataset" title="Permalink to this headline"></a></h2>
+<p>A quadruplet of left,right,disparity,occlusion_mask images is provided as part of the test suite. It can be turned into a small, training-ready dataset to get started with the package.</p>
+<p>To create a toy dataset run :</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">simlearner3d</span><span class="o">/</span><span class="n">processing</span><span class="o">/</span><span class="n">dataset</span><span class="o">/</span><span class="n">toy_dataset</span><span class="o">.</span><span class="n">py</span> <span class="o">+</span><span class="n">task</span><span class="o">.</span><span class="n">task_name</span><span class="o">=</span><span class="s2">&quot;make_hdf5&quot;</span>
+</pre></div>
+</div>
+<p>You will see a new file: <code class="docutils literal notranslate"><span class="pre">/test/data/toy_dataset.hdf5</span></code>.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="install_on_wsl2.html" class="btn btn-neutral float-left" title="Install Simlearner3d on WSL2 with CUDA support" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="make_predictions.html" class="btn btn-neutral float-right" title="Performing inference on new data" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

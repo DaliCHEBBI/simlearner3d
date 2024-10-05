@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Install Simlearner3d on WSL2 with CUDA support &mdash; simlearner3d 3.8.4 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/sphinx_paramlinks.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Preparing data for training" href="prepare_dataset.html" />
+    <link rel="prev" title="Install Simlearner3D on Linux" href="install_on_linux.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> simlearner3d
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install_on_linux.html">Install Simlearner3D on Linux</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="install_on_linux.html#setting-up-a-virtual-environment">Setting up a virtual environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install_on_linux.html#install-source-as-a-package">Install source as a package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install_on_linux.html#troubleshooting">Troubleshooting</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Install Simlearner3d on WSL2 with CUDA support</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#setting-up-wsl2">Setting up WSL2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installing-anaconda">Installing Anaconda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installing-simlearner3d">Installing Simlearner3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#troubleshooting">Troubleshooting</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="prepare_dataset.html">Preparing data for training</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="prepare_dataset.html#peprocessing-functions">Peprocessing functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare_dataset.html#creating-train-val-test-split-dataset-and-split-csv">Creating Train/Val/Test split dataset and split.csv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare_dataset.html#create-a-hdf5-dataset">Create a HDF5 Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare_dataset.html#getting-started-quickly-with-a-toy-dataset">Getting started quickly with a toy dataset</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="make_predictions.html">Performing inference on new data</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="make_predictions.html#transforming-ckpt-model-to-scripted-pt-models">Transforming .ckpt model to scripted .pt models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="make_predictions.html#run-inference-from-source">Run inference from source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="make_predictions.html#run-inference-from-sources">Run inference from sources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="make_predictions.html#run-inference-from-within-a-docker-image">Run inference from within a docker image</a></li>
+<li class="toctree-l2"><a class="reference internal" href="make_predictions.html#additional-options-for-prediction">Additional options for prediction</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Guides</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guides/train_new_model.html">How to train new models</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../guides/train_new_model.html#setup">Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/train_new_model.html#quick-run">Quick run</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/train_new_model.html#training">Training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/train_new_model.html#testing-the-model">Testing the model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/train_new_model.html#inference">Inference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/development.html">Developer’s guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../guides/development.html#code-versionning">Code versionning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/development.html#tests">Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/development.html#continuous-integration-ci">Continuous Integration (CI)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/development.html#continuous-delivery-cd">Continuous Delivery (CD)</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Background</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../background/interpolation.html">KNN-Interpolation to merge multiple predictions [TODO]</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../background/general_design.html">General design of the package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../background/general_design.html#model-should-be-fast-performant-and-practical">Model should be fast, performant, and practical</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../background/general_design.html#subsampling-is-important-to-improve-point-cloud-structure">Subsampling is important to improve point cloud structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../background/general_design.html#speed-is-of-the-essence">Speed is of the essence</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../background/general_design.html#evaluation-is-key-to-select-the-right-approach">Evaluation is key to select the right approach</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Package Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../apidoc/scripts.html">Scripts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../apidoc/scripts.html#module-run">run</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apidoc/scripts.html#module-simlearner3d.train">simlearner3d.train</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../apidoc/configs.html">Default configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../apidoc/simlearner3d.processing.html">simlearner3d.processing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../apidoc/simlearner3d.processing.html#module-simlearner3d.processing.datamodule.hdf5">simlearner3d.processing.datamodule.hdf5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apidoc/simlearner3d.processing.html#module-simlearner3d.processing.dataset.hdf5">simlearner3d.processing.dataset.hdf5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apidoc/simlearner3d.processing.html#module-simlearner3d.processing.dataset.toy_dataset">simlearner3d.processing.dataset.toy_dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apidoc/simlearner3d.processing.html#module-simlearner3d.processing.dataset.utils">simlearner3d.processing.dataset.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apidoc/simlearner3d.processing.html#module-simlearner3d.processing.transforms.compose">simlearner3d.processing.transforms.compose</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apidoc/simlearner3d.processing.html#module-simlearner3d.processing.transforms.transforms">simlearner3d.processing.transforms.transforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apidoc/simlearner3d.processing.html#simlearner3d-processing-transforms-augmentations">simlearner3d.processing.transforms.augmentations</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../apidoc/simlearner3d.model.html">simlearner3d.models</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../apidoc/simlearner3d.model.html#module-simlearner3d.models.generic_model">Model</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../apidoc/simlearner3d.models.modules.html">simlearner3d.models.modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../apidoc/simlearner3d.models.modules.html#msaff-unet32-unet-attention">MSAFF - Unet32 - Unet Attention</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../apidoc/simlearner3d.callbacks.html">simlearner3d.callbacks</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../apidoc/simlearner3d.callbacks.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apidoc/simlearner3d.callbacks.html#module-simlearner3d.callbacks.comet_callbacks">simlearner3d.callbacks.comet_callbacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apidoc/simlearner3d.callbacks.html#module-simlearner3d.callbacks.finetuning_callbacks">simlearner3d.callbacks.finetuning_callbacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apidoc/simlearner3d.callbacks.html#simlearner3d-callbacks-logging-callbacks">simlearner3d.callbacks.logging_callbacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apidoc/simlearner3d.callbacks.html#module-simlearner3d.callbacks">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../apidoc/simlearner3d.utils.html">simlearner3d.utils</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../apidoc/simlearner3d.utils.html#module-simlearner3d.utils.utils">simlearner3d.utils.utils</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">simlearner3d</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Install Simlearner3d on WSL2 with CUDA support</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/tutorials/install_on_wsl2.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="install-simlearner3d-on-wsl2-with-cuda-support">
+<h1>Install Simlearner3d on WSL2 with CUDA support<a class="headerlink" href="#install-simlearner3d-on-wsl2-with-cuda-support" title="Permalink to this headline"></a></h1>
+<section id="setting-up-wsl2">
+<h2><a class="reference external" href="https://learn.microsoft.com/en-us/windows/wsl/install">Setting up WSL2</a><a class="headerlink" href="#setting-up-wsl2" title="Permalink to this headline"></a></h2>
+<p>Simlearner3D requires the latest Linux distros to work properly. That’s why it’s important to make sure that everything in the WSL is up to date.</p>
+<ol class="arabic">
+<li><p>You must be running Windows 10 version 2004 and higher (Build 19041 and higher) or Windows 11 to use the commands below. If you are on earlier versions please see the <a class="reference external" href="https://learn.microsoft.com/en-us/windows/wsl/install-manual">manual install page</a>.</p></li>
+<li><p>Open PowerShell or Windows Command Prompt in administrator mode by right-clicking and selecting “Run as administrator”, enter the <code class="docutils literal notranslate"><span class="pre">wsl</span> <span class="pre">--install</span></code> command, then restart your machine.</p></li>
+<li><p>Ensure you have the latest WSL kernel:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span> wsl.exe --update
+</pre></div>
+</div>
+</li>
+<li><p>This command will enable the features necessary to run WSL and install the Ubuntu distribution (default Ubuntu 22.04) of Linux.</p></li>
+<li><p>If you run <code class="docutils literal notranslate"><span class="pre">wsl</span> <span class="pre">--install</span></code> and see the WSL help text, that means WSL is already installed. In that case run <code class="docutils literal notranslate"><span class="pre">wsl</span> <span class="pre">--list</span> <span class="pre">--online</span></code> to see a list of available distros and run <code class="docutils literal notranslate"><span class="pre">wsl</span> <span class="pre">--install</span> <span class="pre">-d</span> <span class="pre">&lt;DistroName&gt;</span></code> to install a distro. In this case we need Ubuntu 22.04, so type:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span> wsl --install -d Ubuntu
+</pre></div>
+</div>
+</li>
+<li><p>You need to update your libraries before moving forward by running</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span> sudo apt update &amp;&amp; sudo apt upgrade
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
+<section id="installing-anaconda">
+<h2><a class="reference external" href="https://docs.anaconda.com/anaconda/install/linux/">Installing Anaconda</a><a class="headerlink" href="#installing-anaconda" title="Permalink to this headline"></a></h2>
+<ol class="arabic">
+<li><p>In your browser, download the Anaconda installer for <a class="reference external" href="https://www.anaconda.com/products/distribution#linux">Linux</a>.</p></li>
+<li><p>It’s recommended to copy the downloaded file to your WSL home directory- <code class="docutils literal notranslate"><span class="pre">\\wsl.localhost\Ubuntu\home\&lt;username&gt;</span></code></p></li>
+<li><p>In the Ubuntu/ WSL terminal, run the following-</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span> bash Anaconda3-2022.10-Linux-x86_64.sh
+</pre></div>
+</div>
+<p>Replace the <code class="docutils literal notranslate"><span class="pre">Anaconda3-2022.10-Linux-x86_64.sh</span></code> part with your downloaded file name.</p>
+</li>
+<li><p>Press Enter to review the license agreement. Then press and hold Enter to scroll.</p></li>
+<li><p>Enter “yes” to agree to the license agreement.</p></li>
+<li><p>Use Enter to accept the default install location, the installer displays PREFIX=/home/<USER>/anaconda&lt;2/3&gt; and continues the installation. It may take a few minutes to complete.</p></li>
+<li><p>The installer prompts you to choose whether to initialize Anaconda Distribution by running conda init. Anaconda recommends entering “yes”.</p></li>
+</ol>
+</section>
+<section id="installing-simlearner3d">
+<h2>Installing Simlearner3D<a class="headerlink" href="#installing-simlearner3d" title="Permalink to this headline"></a></h2>
+<ol class="arabic">
+<li><p>Clone the Simlearner3D master branch in your working directory using the following command</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span> git clone https://github.com/DaliCHEBBI/simlearner3d.git
+</pre></div>
+</div>
+<p>After it’s done, navigate to the <code class="docutils literal notranslate"><span class="pre">environment.yml</span></code> file. You might need to make couple of changes here before installing the libararies.</p>
+</li>
+<li><p>We use anaconda to manage virtual environments. This makes installing pytorch-related libraries way easier than using pure pip installs.</p></li>
+<li><p>To install the virtual environment, run the following commands within Ubuntu/ WSL terminal-</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span> conda env create -f &quot;/PATH/TO/environment.yml&quot;
+</pre></div>
+</div>
+<p>It will take couple of minutes to download and install all the packages. After that activate the environment by running-</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span> conda activate simlearner3d
+</pre></div>
+</div>
+</li>
+<li><p>Then install from a specific branch from github directly.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span> pip install --upgrade https://github.com/DaliCHEBBI/simlearner3d/tarball/master
+</pre></div>
+</div>
+<p>Alternatively, navigate your working directory to the cloned simlearner3d directory and install from sources directly in editable mode with</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span> pip install -e .
+</pre></div>
+</div>
+</li>
+</ol>
+<p>At this point Simlearner3D is installed and you can move ahead with inference or testing using the method stated <a class="reference external" href="https://DaliCHEBBI.github.io/simlearner3d/tutorials/make_predictions.html">here</a></p>
+</section>
+<section id="troubleshooting">
+<h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permalink to this headline"></a></h2>
+<ul>
+<li><p><em>ImportError: /lib/x86_64-linux-gnu/libstdc++.so.6: version `GLIBCXX_3.4.30’ not found</em> (<a class="reference external" href="https://askubuntu.com/a/582910">**</a>)</p>
+<ul>
+<li><p>run the following commands in your Ubuntu/ WSL terminal</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>  sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+  sudo apt-get update
+  sudo apt-get install --only-upgrade libstdc++6
+</pre></div>
+</div>
+</li>
+</ul>
+</li>
+<li><p>GPU-related errors:</p>
+<ul>
+<li><p><em>RuntimeError: Found no NVIDIA driver on your system. Please check that you have an NVIDIA GPU and installed a driver from http://www.nvidia.com/Download/index.aspx</em></p></li>
+<li><p><em>Failed to initialize NVML: GPU access blocked by the operating system Failed to properly shut down NVML: GPU access blocked by the operating system</em></p></li>
+<li><p><em>Failed to initialize NVML: Driver/library version mismatch</em></p></li>
+<li><p>any other GPU related errors</p>
+<ul>
+<li><p>Make sure you followed the cuda installation part as well as the cuda toolkit version matching properly. If not, remove cuda completely and install again. <a class="reference external" href="https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html#removing-cuda-toolkit-and-driver">**</a></p></li>
+<li><p>Make sure to open the command prompt in Admin mode <a class="reference external" href="https://forums.developer.nvidia.com/t/failed-to-properly-shut-down-nvml-gpu-access-blocked-by-the-operating-system/234413/5">**</a></p></li>
+<li><p>In some cases using the Admin mode blocks access to the GPU, use non-elevated command prompt if that occurs</p></li>
+<li><p>Restart your WSL and try again <a class="reference external" href="https://stackoverflow.com/a/43023000/8889660">**</a></p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>  wsl --shutdown
+</pre></div>
+</div>
+</li>
+<li><p>If the error persists then see if you have the correct GPU models. As of now, cuda toolkit in WSL is supported in <strong>NVIDIA GeForce Game Ready or NVIDIA RTX/Quadro card</strong>s only.</p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="install_on_linux.html" class="btn btn-neutral float-left" title="Install Simlearner3D on Linux" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="prepare_dataset.html" class="btn btn-neutral float-right" title="Preparing data for training" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
