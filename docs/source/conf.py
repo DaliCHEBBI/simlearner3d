@@ -30,7 +30,7 @@ with open(os.path.join(abs_root_path, "pyproject.toml"), "rb") as f:
 release = __version__
 project = data["project"]["name"]
 author = ", ".join([a["name"] for a in data["project"]["authors"]])
-copyright = data["metadata"]["copyright"]
+#copyright = data["metadata"]["copyright"]
 
 # -- YAML main to print the config into  ---------------------------------------------------
 # We need to concatenate configs into a single file using hydra

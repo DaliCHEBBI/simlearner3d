@@ -25,7 +25,7 @@ Its structure was bootstraped from [this code template](https://github.com/ashle
 which heavily relies on [Hydra](https://hydra.cc/) and [Pytorch-Lightning](https://github.com/PyTorchLightning/pytorch-lightning) to enable flexible and rapid iterations of deep learning experiments.
 
 
-> &rarr; For installation and usage, please refer to [**Documentation**](https://github.com/DaliCHEBBI/simlearner3d/).
+> &rarr; For installation and usage, please refer to [**Documentation**](https://dalichebbi.github.io/simlearner3d/).
 
 
 Please cite simlearner3d if it helped your own research. Here is an example BibTex entry:
