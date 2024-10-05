@@ -17,6 +17,7 @@ class TASK_NAMES(Enum):
     FINETUNE = "finetune"
     PREDICT = "predict"
     HDF5 = "create_hdf5"
+    EXTRACT ="extract_pt"
 
 DEFAULT_TASK = TASK_NAMES.FIT.value
 TASK_NAME_DETECTION_STRING = "task.task_name="
@@ -45,6 +46,21 @@ def launch_train(
         utils.print_config(config, resolve=False)
     return train(config)
 
+
+@hydra.main(config_path="configs/", config_name="config.yaml")
+def launch_extract(
+    config:DictConfig
+):  # pragma: no cover  (it's just an initialyzer of a class/method tested elsewhere)
+    """Training, evaluation, testing, or finetuning of a neural network."""
+    # Imports should be nested inside @hydra.main to optimize tab completion
+    # Read more here: https://github.com/facebookresearch/hydra/issues/934
+    from simlearner3d.extract import extract
+    utils.extras(config)
+     # Pretty print config using Rich library
+    if config.get("print_config"):
+        utils.print_config(config, resolve=False)
+    return extract(config)   
+    
 
 
 @hydra.main(config_path="configs/", config_name="config.yaml")
@@ -80,7 +96,7 @@ if __name__=="__main__":
             break
 
     log.info(f"Task: {task_name}")
-    if task_name in [TASK_NAMES.FIT.value, TASK_NAMES.TEST.value, TASK_NAMES.FINETUNE.value]:
+    if task_name in [TASK_NAMES.FIT.value, TASK_NAMES.FINETUNE.value]:
         # load environment variables from `.env` file if it exists
         # recursively searches for `.env` in all folders starting from work dir
         dotenv.load_dotenv(override=True)
@@ -90,6 +106,10 @@ if __name__=="__main__":
         dotenv.load_dotenv(os.path.join(DEFAULT_DIRECTORY, DEFAULT_ENV))
         launch_hdf5()
 
+    elif task_name == TASK_NAMES.EXTRACT.value:
+        dotenv.load_dotenv(override=True)
+        launch_extract()
+        
     else:
         choices = ", ".join(task.value for task in TASK_NAMES)
         raise ValueError(

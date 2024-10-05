@@ -3,11 +3,19 @@
 Refer to the tutorials ([Linux](./install_on_linux.md), [Windows](./install_on_wsl2.md)) for installation instructions.
 
 To run inference, you will need:
-- A source cloud point in LAS format on which to infer classes and probabilites. Sample data from the French "Lidar HD" project can be downloaded at [this address](https://geoservices.ign.fr/lidarhd).
-- A checkpoint of a trained lightning module implementing model logic (class `myria3d.models.model.Model`)
-- A minimal yaml configuration specifying parameters. We use [hydra](https://hydra.cc/) to manage configurations, and this yaml results from the model training. The `datamodule` and `model` parameters groups must match dataset characteristics and model training settings.  The `predict` parameters group specifies path to models and data as well as batch size (N=50 works well, the larger the faster) and use of gpu (optionnal). For hints on what to modify, see the `experiment/predict.yaml` file.
 
-> **A default model and its configuration are embedded directly in code under folder `trained_model_assets`.** They are expected to always be compatible with the code base, and updated as needed in case of e.g. change of configuration format or model implementation.
+- A checkpoint of a trained lightning module implementing model logic (class `simlearner3d.models.generic_model.Model`)
+- A pair of epipolar images
+- An installed version of [our micmac repository](https://github.com/DaliCHEBBI/micmac_SimLearning).
+
+
+## Transforming .ckpt model to scripted .pt models
+
+Our [our micmac version](https://github.com/DaliCHEBBI/micmac_SimLearning) leverages learned models together with [PyTorch c++ api](https://pytorch.org/get-started/locally/) to perform large scale stereo image matching. 
+In order to use trained models, you need to script the model checkpoint from pytorchlightning to a .pt model. This is performed using the following command line:
+
+
+
 
 ## Run inference from source
 

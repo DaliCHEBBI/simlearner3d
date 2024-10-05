@@ -73,11 +73,10 @@ datamodule.hdf5_file_path="${DATASET_DIR}Stereo/eurosdr.hdf5"
 
 ## Getting started quickly with a toy dataset
 
-A LAS file is provided as part of the test suite. It can be turned into a small, training-ready dataset to get started with the package. 
+A quadruplet of left,right,disparity,occlusion_mask images is provided as part of the test suite. It can be turned into a small, training-ready dataset to get started with the package. 
 
 To create a toy dataset run :
 ```
-python myria3d/pctl/dataset/toy_dataset.py
+python simlearner3d/processing/dataset/toy_dataset.py +task.task_name="make_hdf5"
 ```
-
 You will see a new file: `/test/data/toy_dataset.hdf5`.

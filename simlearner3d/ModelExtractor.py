@@ -2,7 +2,6 @@
 from pathlib import Path
 from  models.UNetDecisionEBM import UnetMlpCubeMatcher,UNetInference
 from  models.model import DecisionNetworkOnCube
-from  models.Matcher3D import Matcher3D 
 import torch
 import torch.nn as nn
 #import tifffile as tff

@@ -57,7 +57,7 @@ Simlearner3D requires the latest Linux distros to work properly. That's why it's
 
         pip install -e .
 
-At this point Simlearner3D is installed and you can move ahead with inference or testing using the method stated [here](https://ignf.github.io/simlearner3d/tutorials/make_predictions.html) 
+At this point Simlearner3D is installed and you can move ahead with inference or testing using the method stated [here](https://DaliCHEBBI.github.io/simlearner3d/tutorials/make_predictions.html) 
 
 
         
