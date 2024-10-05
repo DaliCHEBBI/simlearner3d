@@ -6,3 +6,4 @@ docs/build
 simlearner3d/processing/datamodule/__pycache__
 simlearner3d/processing/dataset/__pycache__
 simlearner3d/processing/transforms/__pycache__
+.env
