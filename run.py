@@ -96,7 +96,7 @@ if __name__=="__main__":
             break
 
     log.info(f"Task: {task_name}")
-    if task_name in [TASK_NAMES.FIT.value, TASK_NAMES.FINETUNE.value]:
+    if task_name in [TASK_NAMES.FIT.value, TASK_NAMES.FINETUNE.value, TASK_NAMES.TEST.value]:
         # load environment variables from `.env` file if it exists
         # recursively searches for `.env` in all folders starting from work dir
         dotenv.load_dotenv(override=True)
@@ -109,7 +109,7 @@ if __name__=="__main__":
     elif task_name == TASK_NAMES.EXTRACT.value:
         dotenv.load_dotenv(override=True)
         launch_extract()
-        
+
     else:
         choices = ", ".join(task.value for task in TASK_NAMES)
         raise ValueError(
