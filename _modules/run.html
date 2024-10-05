@@ -258,7 +258,7 @@
             <span class="k">break</span>
 
     <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Task: </span><span class="si">{</span><span class="n">task_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">task_name</span> <span class="ow">in</span> <span class="p">[</span><span class="n">TASK_NAMES</span><span class="o">.</span><span class="n">FIT</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">TASK_NAMES</span><span class="o">.</span><span class="n">FINETUNE</span><span class="o">.</span><span class="n">value</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="n">task_name</span> <span class="ow">in</span> <span class="p">[</span><span class="n">TASK_NAMES</span><span class="o">.</span><span class="n">FIT</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">TASK_NAMES</span><span class="o">.</span><span class="n">FINETUNE</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">TASK_NAMES</span><span class="o">.</span><span class="n">TEST</span><span class="o">.</span><span class="n">value</span><span class="p">]:</span>
         <span class="c1"># load environment variables from `.env` file if it exists</span>
         <span class="c1"># recursively searches for `.env` in all folders starting from work dir</span>
         <span class="n">dotenv</span><span class="o">.</span><span class="n">load_dotenv</span><span class="p">(</span><span class="n">override</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -271,7 +271,7 @@
     <span class="k">elif</span> <span class="n">task_name</span> <span class="o">==</span> <span class="n">TASK_NAMES</span><span class="o">.</span><span class="n">EXTRACT</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
         <span class="n">dotenv</span><span class="o">.</span><span class="n">load_dotenv</span><span class="p">(</span><span class="n">override</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">launch_extract</span><span class="p">()</span>
-        
+
     <span class="k">else</span><span class="p">:</span>
         <span class="n">choices</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">TASK_NAMES</span><span class="p">)</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
