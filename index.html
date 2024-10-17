@@ -61,10 +61,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/make_predictions.html">Performing inference on new data</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/make_predictions.html#transforming-ckpt-model-to-scripted-pt-models">Transforming .ckpt model to scripted .pt models</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tutorials/make_predictions.html#run-inference-from-source">Run inference from source</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tutorials/make_predictions.html#run-inference-from-sources">Run inference from sources</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tutorials/make_predictions.html#run-inference-from-within-a-docker-image">Run inference from within a docker image</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tutorials/make_predictions.html#additional-options-for-prediction">Additional options for prediction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/make_predictions.html#run-inference-on-a-pair-of-epipolar-images">Run inference on a pair of epipolar images</a></li>
 </ul>
 </li>
 </ul>
@@ -164,14 +161,12 @@
              
   <section id="simlearner3d-documentation">
 <h1>Simlearner3D &gt; Documentation<a class="headerlink" href="#simlearner3d-documentation" title="Permalink to this headline"></a></h1>
-<p>Myria3D is a deep learning library designed with a focused scope: the multiclass semantic segmentation of large scale, high density aerial Lidar points cloud.</p>
-<p>The library implements the training of 3D Segmentation neural networks, with optimized data-processing and evaluation logics at fit time. Inference on unseen, large scale point cloud is also supported.
-It allows for the evaluation of single-class IoU on the full point cloud, which results in reliable model evaluation.</p>
-<p>Although the library can be easily extended with new neural network architectures or new data signatures, the library makes some opiniated choices in terms of neural network architecture, data processing logics, and inference logic.</p>
-<p>Myria3D is built upon <a class="reference external" href="https://pytorch.org/">PyTorch</a>. It keeps the standard data format
+<p>Simlearner3D is a deep learning library designed with the focus of large scale dense image matching by similarity learning from pairs of epipolar images.</p>
+<p>The library implements the training of feature extractors (MSAFF,UNet32,UNet-Attention) with and without a MLP given pairs of images, corresponding disparity and occlusion maps. Qualification of models is conducted using joint probability maps estimation. This actually tells if learned similarity cues allow decent separation between matching and non matching pixels.</p>
+<p>Simlearner3D is built upon <a class="reference external" href="https://pytorch.org/">PyTorch</a>. It keeps the standard data format
 from <a class="reference external" href="https://pytorch-geometric.readthedocs.io/">Pytorch-Geometric</a>.
 Its structure was bootstraped from <a class="reference external" href="https://github.com/ashleve/lightning-hydra-template">this code template</a>,
-which heavily relies on <a class="reference external" href="https://hydra.cc/">Hydra</a> and <a class="reference external" href="https://github.com/PyTorchLightning/pytorch-lightning">Pytorch-Lightning</a> to
+The latter relies on <a class="reference external" href="https://hydra.cc/">Hydra</a> and <a class="reference external" href="https://github.com/PyTorchLightning/pytorch-lightning">Pytorch-Lightning</a> to
 enable flexible and rapid iterations of deep learning experiments.</p>
 <div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>

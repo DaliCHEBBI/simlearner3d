@@ -62,10 +62,7 @@
 </li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Performing inference on new data</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#transforming-ckpt-model-to-scripted-pt-models">Transforming .ckpt model to scripted .pt models</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#run-inference-from-source">Run inference from source</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#run-inference-from-sources">Run inference from sources</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#run-inference-from-within-a-docker-image">Run inference from within a docker image</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#additional-options-for-prediction">Additional options for prediction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#run-inference-on-a-pair-of-epipolar-images">Run inference on a pair of epipolar images</a></li>
 </ul>
 </li>
 </ul>
@@ -169,77 +166,266 @@
 <ul class="simple">
 <li><p>A checkpoint of a trained lightning module implementing model logic (class <code class="docutils literal notranslate"><span class="pre">simlearner3d.models.generic_model.Model</span></code>)</p></li>
 <li><p>A pair of epipolar images</p></li>
-<li><p>An installed version of <a class="reference external" href="https://github.com/DaliCHEBBI/micmac_SimLearning">our micmac repository</a>.</p></li>
+<li><p>An installed and working version of <a class="reference external" href="https://github.com/DaliCHEBBI/micmac_SimLearning">our micmac repository</a>.</p></li>
 </ul>
 <section id="transforming-ckpt-model-to-scripted-pt-models">
 <h2>Transforming .ckpt model to scripted .pt models<a class="headerlink" href="#transforming-ckpt-model-to-scripted-pt-models" title="Permalink to this headline"></a></h2>
 <p>Our <a class="reference external" href="https://github.com/DaliCHEBBI/micmac_SimLearning">our micmac version</a> leverages learned models together with <a class="reference external" href="https://pytorch.org/get-started/locally/">PyTorch c++ api</a> to perform large scale stereo image matching.
 In order to use trained models, you need to script the model checkpoint from pytorchlightning to a .pt model. This is performed using the following command line:</p>
-</section>
-<section id="run-inference-from-source">
-<h2>Run inference from source<a class="headerlink" href="#run-inference-from-source" title="Permalink to this headline"></a></h2>
-<p>Then, fill out the {missing parameters} below and run:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>run.py<span class="w"> </span><span class="se">\</span>
-task.task_name<span class="o">=</span>predict<span class="w"> </span><span class="se">\</span>
-predict.src_las<span class="o">={</span>/path/to/cloud.las<span class="o">}</span><span class="w"> </span><span class="se">\</span>
-predict.output_dir<span class="o">={</span>/path/to/out/dir/<span class="o">}</span><span class="w"> </span><span class="se">\</span>
-predict.gpus<span class="o">={</span><span class="m">0</span><span class="w"> </span><span class="k">for</span><span class="w"> </span>none,<span class="w"> </span><span class="o">[</span>i<span class="o">]</span><span class="w"> </span>to<span class="w"> </span>use<span class="w"> </span>GPU<span class="w"> </span>number<span class="w"> </span>i<span class="o">}</span><span class="w"> </span><span class="se">\</span>
-datamodule.batch_size<span class="o">={</span>N<span class="o">}</span>
+task.task_name<span class="o">=</span>extract_pt<span class="w"> </span><span class="se">\</span>
+model.ckpt_path<span class="o">={</span>/path/to/checkpoint.ckpt<span class="o">}</span>
 </pre></div>
 </div>
-<p>To show you current inference config, simply add a <code class="docutils literal notranslate"><span class="pre">--help</span></code> flag:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>run.py<span class="w"> </span>task.task_name<span class="o">=</span>predict<span class="w"> </span>--help
-</pre></div>
-</div>
-<p>Note that <code class="docutils literal notranslate"><span class="pre">predict.src_las</span></code> may be any valid glob pattern (e.g. <code class="docutils literal notranslate"><span class="pre">/path/to/multiple_files/*.las</span></code>), in order to <strong>predict on multiple files successively</strong>.<br />
-If the lidar file doesn’t specify an EPSG in its meatadata, it HAS TO BE be specified with <code class="docutils literal notranslate"><span class="pre">datamodule.epsg=...</span></code></p>
 </section>
-<section id="run-inference-from-sources">
-<h2>Run inference from sources<a class="headerlink" href="#run-inference-from-sources" title="Permalink to this headline"></a></h2>
-<p>In case you want to swicth to package-based inference, you will need to comment out the parameters that depends on local environment variables such as logger credentials and training data directory. You can do so by making a copy of your configuration file and commenting out the lines containing <code class="docutils literal notranslate"><span class="pre">oc.env</span></code> logic.</p>
-</section>
-<section id="run-inference-from-within-a-docker-image">
-<h2>Run inference from within a docker image<a class="headerlink" href="#run-inference-from-within-a-docker-image" title="Permalink to this headline"></a></h2>
-<p>Up to date docker images (named <code class="docutils literal notranslate"><span class="pre">myria3d</span></code>) are created via Github integration actions (see <a class="reference internal" href="../guides/development.html"><span class="doc std std-doc">Developer’s guide</span></a>.</p>
-<p>A docker image encapsulating the virtual environment and application sources can also be built using the provided Dockerfile. At built time, the Dockerfile is not standalone and should be part of the repository - whose content is copied into the image - at the github reference you want to build from.</p>
-<p>To run inference:</p>
+<section id="run-inference-on-a-pair-of-epipolar-images">
+<h2>Run inference on a pair of epipolar images<a class="headerlink" href="#run-inference-on-a-pair-of-epipolar-images" title="Permalink to this headline"></a></h2>
+<p>Inference routines are implemented in C++ into the open photogrammetry software <a class="reference external" href="https://github.com/micmacIGN/micmac">MicMac</a>.</p>
+<p>It tackles large scale stereo matching for large frame aerial imagery and EHR Satellite stereo reconstruction. Our models are embedded into a hierachical multi-resolution pipeline where lower resolution surface reconstructions serve as a prior for the next level reconstruction. This strategy is robust and allows integrating hand-crafted similarity metrics like (ncc, census,…) for lower resolution low context matching.</p>
+<p>To perform hierarchical matching using our similarity learning models, you need to:</p>
 <ul class="simple">
-<li><p>Mount the needed volumes with the <code class="docutils literal notranslate"><span class="pre">-v</span></code> option.</p></li>
-<li><p>Always set <code class="docutils literal notranslate"><span class="pre">--ipc=host</span></code> to allow multithreading (used in pytorch dataloader, as mentionned in <a class="reference external" href="https://github.com/pytorch/pytorch#using-pre-built-images">Pytorch’s README</a>).</p></li>
-<li><p>Increase the shared memory with <code class="docutils literal notranslate"><span class="pre">--shm-size=2gb</span></code> (which should be enough for 1km*1km point French “Lidar HD” clouds).</p></li>
-<li><p>Set <code class="docutils literal notranslate"><span class="pre">--gpus=all</span></code> to make gpus visible to the container if available.</p></li>
+<li><p>git clone our repository and install <code class="docutils literal notranslate"><span class="pre">micmac</span></code> and <code class="docutils literal notranslate"><span class="pre">MicMac</span> <span class="pre">V2</span></code> after downloading plateform specific <span class="xref myst">torch cpp libraries</span>. You may need to modifiy <code class="docutils literal notranslate"><span class="pre">TORCH_INSTALL_PREFIX</span></code> in CMakeLists.txt to point to  <code class="docutils literal notranslate"><span class="pre">libtorch</span></code> folder. For our installation, we set it to <code class="docutils literal notranslate"><span class="pre">${MMVII_SOURCE_DIR}/libtorch</span></code></p></li>
+<li><p>compile MMVII and micmac with libtorch</p></li>
+<li><p>MicMac uses <code class="docutils literal notranslate"><span class="pre">xml</span> <span class="pre">specifications</span></code> files for hierachical dense image matching, we provide an example xml configuration file:
+`
+<ParamMICMAC></p></li>
 </ul>
-<p>See <a class="reference external" href="https://github.com/anibali/docker-pytorch#running-pytorch-scripts">docker-pytorch README</a> for more details plus an additional option to specify user id at runtime.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># specify your paths here as needed</span>
-docker<span class="w"> </span>run<span class="w"> </span><span class="se">\</span>
--v<span class="w"> </span><span class="o">{</span>local_inputs<span class="o">}</span>:/inputs/<span class="w"> </span><span class="se">\</span>
--v<span class="w"> </span><span class="o">{</span>local_output<span class="o">}</span>:/outputs/<span class="w"> </span><span class="se">\</span>
---ipc<span class="o">=</span>host<span class="w"> </span><span class="se">\</span>
---gpus<span class="o">=</span>all<span class="w"> </span><span class="se">\</span>
---shm-size<span class="o">=</span>2gb<span class="w"> </span><span class="se">\</span>
-python<span class="w"> </span>run.py<span class="w"> </span><span class="o">{</span>...config<span class="w"> </span>paths<span class="w"> </span><span class="p">&amp;</span><span class="w"> </span>options...<span class="o">}</span>
+<DicoLoc>
+       <Symb> ZReg=0.005  </Symb>
+       <Symb> DefCor=0.4  </Symb>
+       <Symb> CostTrans=1.0 </Symb>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>   &lt;Symb&gt; SzW=3 &lt;/Symb&gt;
+   &lt;Symb&gt; PenteMax=3.0 &lt;/Symb&gt;
+   &lt;Symb&gt; Interpol=eInterpolBiLin  &lt;/Symb&gt;
+   &lt;Symb&gt; DoEpi=true &lt;/Symb&gt;
+   &lt;Symb&gt; Ori=Epi    &lt;/Symb&gt;
+
+   &lt;Symb&gt; Im=TEST   &lt;/Symb&gt;
+
+   &lt;Symb&gt; Im1=Im1DUBL.tif &lt;/Symb&gt;
+   &lt;Symb&gt; Im2=Im2DUBL.tif &lt;/Symb&gt;
+
+   &lt;Symb&gt; Modele=XXX&lt;/Symb&gt;
+   &lt;Symb&gt; WITH_MODELE=true &lt;/Symb&gt;
+   &lt;Symb&gt; IncPix=100  &lt;/Symb&gt;
+   &lt;Symb&gt; NbDirProg=7   &lt;/Symb&gt;
+   &lt;Symb&gt; ExtImIn=tif   &lt;/Symb&gt;
+   &lt;Symb&gt; Purge=true   &lt;/Symb&gt;
+   &lt;Symb&gt; NbProc=4   &lt;/Symb&gt;
+   &lt;Symb&gt; OnCuda=false&lt;/Symb&gt;
+   &lt;Symb&gt; UseMLP=false&lt;/Symb&gt;
 </pre></div>
 </div>
-</section>
-<section id="additional-options-for-prediction">
-<h2>Additional options for prediction<a class="headerlink" href="#additional-options-for-prediction" title="Permalink to this headline"></a></h2>
-<section id="output-dimensions">
-<h3>Output dimensions<a class="headerlink" href="#output-dimensions" title="Permalink to this headline"></a></h3>
-<p>By default, the predicted classification is stored in a new <code class="docutils literal notranslate"><span class="pre">PredictedClassification</span></code> LAS dimension. The <a class="reference external" href="https://en.wikipedia.org/wiki/Entropy_(information_theory)">entropy</a> of probabilities is also stored in a new <code class="docutils literal notranslate"><span class="pre">entropy</span></code> LAS dimension. It can be used as a very limited proxy of uncertainty.</p>
-<p>Change params <code class="docutils literal notranslate"><span class="pre">predict.interpolator.predicted_classification_channel</span></code> and <code class="docutils literal notranslate"><span class="pre">predict.interpolator.entropy_channel</span></code> to change name of output dimensions. Set to <code class="docutils literal notranslate"><span class="pre">null</span></code> to disable saving these dimensions.</p>
-<p>One can control for which classes to save the probabilities. This is achieved with a <code class="docutils literal notranslate"><span class="pre">predict.interpolator.probas_to_save</span></code> config parameter, which can be either the <code class="docutils literal notranslate"><span class="pre">all</span></code> keyword (to save probabilities for all classes) or a list of specific classes (e.g. <code class="docutils literal notranslate"><span class="pre">predict.interpolator.probas_to_save=[building,vegetation]</span></code> - note the absence of space between class names).</p>
-</section>
-<section id="receptive-field-overlap-at-inference-time">
-<h3>Receptive field overlap at inference time<a class="headerlink" href="#receptive-field-overlap-at-inference-time" title="Permalink to this headline"></a></h3>
-<p>To improve spatial regularity of the predicted probabilities, one can make inference on square receptive fields that have a non-null overlap with each other. This has the effect of smoothing out irregular predictions. The resulting classification is better looking, with more homogeneous predictions at the object level.</p>
-<p>To define an overlap between successive 50m*50m receptive fields, set <code class="docutils literal notranslate"><span class="pre">predict.subtile_overlap={value}</span></code>.
-This, however, comes with a large computation price. For instance, <code class="docutils literal notranslate"><span class="pre">predict.subtile_overlap=25</span></code> means a 25m overlap on both x and y axes, which multiplies inference time by a factor of 4.</p>
-</section>
-<section id="ignoring-artefacts-points-during-inference">
-<h3>Ignoring artefacts points during inference<a class="headerlink" href="#ignoring-artefacts-points-during-inference" title="Permalink to this headline"></a></h3>
-<p>Lidar acquisition may have produced artefacts points. If these points were identified with one (or several) classification code(s), they can be ignored during inference. These points will still be present in the output cloud, but will not negatively disturb model inference. They will keep their original class in the predicted classification dim. They will have null probas and entropy.</p>
-<p>In the configuration, data transforms are used to drop points with a class 65. By convention, 65 will flag Lidar artefacts points. Additional classes may be mapped to 65 to be ignored during inference as well, via the <code class="docutils literal notranslate"><span class="pre">dataset_description.classification_preprocessing_dict</span></code> parameter. Note: you may need to use quotes when overriding this parameter via CLI.</p>
-</section>
+  <!-- Parametres calcule -->
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>    &lt;Symb&gt;  DirMEC=${Modele} &lt;/Symb&gt;
+    &lt;Symb&gt;  DirPyram=Pyram/ &lt;/Symb&gt;
+</pre></div>
+</div>
+</DicoLoc>
+<p>&lt;Section_Terrain&gt;
+<IntervParalaxe>
+<Px1IncCalc> ${IncPix} </Px1IncCalc>
+</IntervParalaxe></p>
+<p>&lt;/Section_Terrain&gt;</p>
+<p>&lt;Section_PriseDeVue&gt;</p>
+<p><GeomImages> eGeomImage_EpipolairePure </GeomImages></p>
+   <Images>
+    	<Im1>   ${Im1} </Im1>
+    	<Im2>   ${Im2}    </Im2>
+   </Images>
+   <MasqImageIn>
+             <OneMasqueImage>
+                <PatternSel>  (.*)\.${ExtImIn}  </PatternSel>
+                <NomMasq>  $1_Masq.tif     </NomMasq>
+             </OneMasqueImage>
+             <AcceptNonExistingFile> true </AcceptNonExistingFile>
+   </MasqImageIn>
+<p>&lt;/Section_PriseDeVue&gt;</p>
+<!--  *************************************************************
+       Parametres fixant le comportement
+     de l'algo de mise en correspondance
+-->
+<p>&lt;Section_MEC&gt;
+<ChantierFullImage1> true </ChantierFullImage1></p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>&lt;EtapeMEC&gt;
+	    &lt;DeZoom&gt; -1 &lt;/DeZoom&gt;
+	    &lt;ModeInterpolation&gt; ${Interpol} &lt;/ModeInterpolation&gt;
+	
+    &lt;!-- param correl --&gt;
+    &lt;SzW&gt; ${SzW} &lt;/SzW&gt;
+
+        &lt;AlgoRegul&gt; eAlgo2PrgDyn &lt;/AlgoRegul&gt;
+
+    &lt;Px1Pas&gt;        1  &lt;/Px1Pas&gt;
+        &lt;Px1DilatAlti&gt;  7  &lt;/Px1DilatAlti&gt;
+    &lt;Px1DilatPlani&gt; 3  &lt;/Px1DilatPlani&gt;
+    &lt;Px1Regul&gt; ${ZReg} &lt;/Px1Regul&gt;
+
+        &lt;GenImagesCorrel&gt; true &lt;/GenImagesCorrel&gt;
+    
+        &lt;SsResolOptim&gt; 1 &lt;/SsResolOptim&gt;
+        &lt;CoxRoyUChar&gt; false &lt;/CoxRoyUChar&gt;
+
+
+    &lt;ModulationProgDyn&gt;
+           &lt;EtapeProgDyn&gt;
+        	   &lt;ModeAgreg&gt; ePrgDAgrSomme &lt;/ModeAgreg&gt;
+               &lt;NbDir&gt; ${NbDirProg} &lt;/NbDir&gt;
+           &lt;/EtapeProgDyn&gt;
+           &lt;Px1PenteMax&gt; ${PenteMax} &lt;/Px1PenteMax&gt;
+           &lt;ArgMaskAuto&gt;
+        	   &lt;ValDefCorrel&gt; ${DefCor} &lt;/ValDefCorrel&gt;
+	   &lt;CostTrans&gt; ${CostTrans} &lt;/CostTrans&gt;
+               &lt;ReInjectMask&gt; false &lt;/ReInjectMask&gt; 
+           &lt;/ArgMaskAuto&gt;
+        &lt;/ModulationProgDyn&gt;
+
+
+&lt;/EtapeMEC&gt;
+
+&lt;!--  &lt;EtapeMEC&gt; &lt;DeZoom&gt; 16 &lt;/DeZoom&gt; &lt;/EtapeMEC&gt;	 --&gt;
+&lt;!-- &lt;EtapeMEC&gt; &lt;DeZoom&gt; 64 &lt;/DeZoom&gt; &lt;/EtapeMEC&gt; 
+&lt;EtapeMEC&gt; &lt;DeZoom&gt; 32 &lt;/DeZoom&gt; &lt;/EtapeMEC&gt;      --&gt;
+&lt;EtapeMEC&gt; &lt;DeZoom&gt; 16 &lt;/DeZoom&gt; &lt;/EtapeMEC&gt;
+
+
+&lt;EtapeMEC&gt; &lt;DeZoom&gt; 8  &lt;/DeZoom&gt; 
+        &lt;CorrelAdHoc&gt;
+            &lt;SzBlocAH&gt; 40000000 &lt;/SzBlocAH&gt;
+            &lt;TypeCAH&gt;
+                &lt;ScoreLearnedMMVII &gt;
+                    &lt;FileModeleCost&gt; MVCNNCorrel&lt;/FileModeleCost&gt;
+                    &lt;FileModeleParams&gt;../MODEL_MSAFF_AERIAL_DECISION/.*.pt&lt;/FileModeleParams&gt;
+                    &lt;FileModeleArch&gt;UnetMLPMatcher&lt;/FileModeleArch&gt;
+                    &lt;Cuda&gt; ${OnCuda} &lt;/Cuda&gt;
+		&lt;UsePredicNet&gt; ${UseMLP} &lt;/UsePredicNet&gt;
+                &lt;/ScoreLearnedMMVII&gt;
+            &lt;/TypeCAH&gt;
+        &lt;/CorrelAdHoc&gt;
+   &lt;/EtapeMEC&gt;
+
+&lt;EtapeMEC&gt; &lt;DeZoom&gt; 4  &lt;/DeZoom&gt; 
+        &lt;CorrelAdHoc&gt;
+            &lt;SzBlocAH&gt; 40000000 &lt;/SzBlocAH&gt;
+            &lt;TypeCAH&gt;
+                &lt;ScoreLearnedMMVII &gt;
+                    &lt;FileModeleCost&gt; MVCNNCorrel&lt;/FileModeleCost&gt;
+                    &lt;FileModeleParams&gt;../MODEL_MSAFF_AERIAL_DECISION/.*.pt&lt;/FileModeleParams&gt;
+                    &lt;FileModeleArch&gt;UnetMLPMatcher&lt;/FileModeleArch&gt;
+                    &lt;Cuda&gt; ${OnCuda} &lt;/Cuda&gt;
+		&lt;UsePredicNet&gt; ${UseMLP} &lt;/UsePredicNet&gt;
+                &lt;/ScoreLearnedMMVII&gt;
+            &lt;/TypeCAH&gt;
+        &lt;/CorrelAdHoc&gt;
+   &lt;/EtapeMEC&gt;
+&lt;EtapeMEC&gt; 
+    &lt;DeZoom&gt; 2  &lt;/DeZoom&gt; 
+        &lt;CorrelAdHoc&gt;
+            &lt;SzBlocAH&gt; 40000000 &lt;/SzBlocAH&gt;
+            &lt;TypeCAH&gt;
+                &lt;ScoreLearnedMMVII &gt;
+                    &lt;FileModeleCost&gt; MVCNNCorrel&lt;/FileModeleCost&gt;
+                    &lt;FileModeleParams&gt;../MODEL_MSAFF_AERIAL_DECISION/.*.pt&lt;/FileModeleParams&gt;
+                    &lt;FileModeleArch&gt;UnetMLPMatcher&lt;/FileModeleArch&gt;
+                    &lt;Cuda&gt; ${OnCuda} &lt;/Cuda&gt;
+		&lt;UsePredicNet&gt; ${UseMLP} &lt;/UsePredicNet&gt;
+                &lt;/ScoreLearnedMMVII&gt;
+            &lt;/TypeCAH&gt;
+        &lt;/CorrelAdHoc&gt;
+&lt;/EtapeMEC&gt;	
+&lt;EtapeMEC&gt; 
+    &lt;DeZoom&gt; 1  &lt;/DeZoom&gt; 
+        &lt;CorrelAdHoc&gt;
+            &lt;SzBlocAH&gt; 40000000 &lt;/SzBlocAH&gt;
+            &lt;TypeCAH&gt;
+                &lt;ScoreLearnedMMVII &gt;
+                    &lt;FileModeleCost&gt; MVCNNCorrel&lt;/FileModeleCost&gt;
+                    &lt;FileModeleParams&gt;../MODEL_MSAFF_AERIAL_DECISION/.*.pt&lt;/FileModeleParams&gt;
+                    &lt;FileModeleArch&gt;UnetMLPMatcher&lt;/FileModeleArch&gt;
+                    &lt;Cuda&gt; ${OnCuda} &lt;/Cuda&gt;
+		&lt;UsePredicNet&gt; ${UseMLP} &lt;/UsePredicNet&gt;
+                &lt;/ScoreLearnedMMVII&gt;
+            &lt;/TypeCAH&gt;
+        &lt;/CorrelAdHoc&gt;
+    
+&lt;/EtapeMEC&gt;
+</pre></div>
+</div>
+   <!-- <EtapeMEC>
+        <DeZoom > 1 </DeZoom>
+        <Px1Pas>   0.5  </Px1Pas>
+    </EtapeMEC> -->
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>&lt;EtapeMEC&gt;
+        &lt;DeZoom&gt;  1  &lt;/DeZoom&gt;
+        &lt;Px1Pas&gt;   1.0     &lt;/Px1Pas&gt;
+        &lt;AlgoRegul&gt; eAlgoDequant &lt;/AlgoRegul&gt;
+&lt;/EtapeMEC&gt; 
+    
+&lt;HighPrecPyrIm&gt; false &lt;/HighPrecPyrIm&gt;
+
+&lt;TypePyramImage&gt;
+           &lt;Resol &gt;    1          &lt;/Resol&gt;
+           &lt;DivIm&gt;    1 &lt;/DivIm&gt;
+           &lt;TypeEl&gt;  eFloat32Bits   &lt;/TypeEl&gt;
+    &lt;/TypePyramImage&gt;
+</pre></div>
+</div>
+<p>&lt;/Section_MEC&gt;</p>
+<!--  *************************************************************
+       Parametres fixant les resultats
+     devant etre produits par l'algo
+-->
+<p>&lt;Section_Results&gt;
+<GeomMNT> eGeomPxBiDim     </GeomMNT>
+<ZoomMakeTA> 16 </ZoomMakeTA>
+<GammaVisu> 2.0 </GammaVisu>
+<ZoomVisuLiaison> -1 </ZoomVisuLiaison></p>
+<p>&lt;/Section_Results&gt;</p>
+<!--  *************************************************************
+       Parametres lies a la gestions
+     du "chantier" sur la machine
+-->
+<p>&lt;Section_WorkSpace&gt;</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>&lt;WorkDir&gt; ThisDir &lt;/WorkDir&gt; 
+&lt;TmpMEC&gt; ${DirMEC}/ &lt;/TmpMEC&gt;
+&lt;TmpResult&gt; ${DirMEC}/ &lt;/TmpResult&gt;
+&lt;TmpPyr&gt; ${DirPyram} &lt;/TmpPyr&gt;
+&lt;PurgeMECResultBefore&gt;  ${Purge} &lt;/PurgeMECResultBefore&gt;
+
+&lt;ByProcess&gt;  ${NbProc} &lt;/ByProcess&gt;
+
+&lt;AvalaibleMemory&gt; 2048 &lt;/AvalaibleMemory&gt;
+&lt;SzDalleMin&gt; 540 &lt;/SzDalleMin&gt;
+&lt;SzDalleMax&gt; 512 &lt;/SzDalleMax&gt;
+&lt;SzRecouvrtDalles&gt; 20 &lt;/SzRecouvrtDalles&gt;
+&lt;SzMinDecomposCalc&gt; 40 &lt;/SzMinDecomposCalc&gt;
+&lt;ComprMasque&gt; eComprTiff_None &lt;/ComprMasque&gt;
+</pre></div>
+</div>
+<p>&lt;/Section_WorkSpace&gt;</p>
+<p>&lt;Section_Vrac&gt;
+<DebugMM> true</DebugMM>
+&lt;/Section_Vrac&gt;</p>
+</ParamMICMAC>
+`
+* The aformentionned xml file activates our models from `Zoom 4`, i.e models are in charge of reconstruction for zooms: 4,2,1.
+This is accomplished with and adhoc correlation that calls a set of .pt models (feature extraction + mlp).
+`
+            <CorrelAdHoc>
+                <SzBlocAH> 40000000 </SzBlocAH>
+                <TypeCAH>
+                    <ScoreLearnedMMVII >
+                        <FileModeleCost> MVCNNCorrel</FileModeleCost>
+                        <FileModeleParams>../MODEL_MSAFF_AERIAL_DECISION/.*.pt</FileModeleParams>
+                        <FileModeleArch>UnetMLPMatcher</FileModeleArch>
+                        <Cuda> ${OnCuda} </Cuda>
+			            <UsePredicNet> ${UseMLP} </UsePredicNet>
+                    </ScoreLearnedMMVII>
+                </TypeCAH>
+            </CorrelAdHoc>
+`
+* Parametrization: To launch stereo matching between a pair of epipolar images,
+<p><code class="docutils literal notranslate"><span class="pre">mm3d</span> <span class="pre">MICMAC</span> <span class="pre">File.xml</span> <span class="pre">+Im1=Im1.tif</span> <span class="pre">+Im2=Im2.tif</span>&#160; <span class="pre">+DirMEC=MEC/</span> <span class="pre">+OnCuda=0</span> <span class="pre">+UsePredicNet=1</span></code></p>
 </section>
 </section>
 
