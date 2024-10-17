@@ -6,8 +6,7 @@ To run inference, you will need:
 
 - A checkpoint of a trained lightning module implementing model logic (class `simlearner3d.models.generic_model.Model`)
 - A pair of epipolar images
-- An installed version of [our micmac repository](https://github.com/DaliCHEBBI/micmac_SimLearning).
-
+- An installed and working version of [our micmac repository](https://github.com/DaliCHEBBI/micmac_SimLearning).
 
 ## Transforming .ckpt model to scripted .pt models
 
@@ -15,79 +14,277 @@ Our [our micmac version](https://github.com/DaliCHEBBI/micmac_SimLearning) lever
 In order to use trained models, you need to script the model checkpoint from pytorchlightning to a .pt model. This is performed using the following command line:
 
 
-
-
-## Run inference from source
-
-Then, fill out the {missing parameters} below and run: 
-
 ```bash
 python run.py \
-task.task_name=predict \
-predict.src_las={/path/to/cloud.las} \
-predict.output_dir={/path/to/out/dir/} \
-predict.gpus={0 for none, [i] to use GPU number i} \
-datamodule.batch_size={N}
+task.task_name=extract_pt \
+model.ckpt_path={/path/to/checkpoint.ckpt}
 ```
 
-To show you current inference config, simply add a `--help` flag:
+## Run inference on a pair of epipolar images
 
-```bash
-python run.py task.task_name=predict --help
-```
+Inference routines are implemented in C++ into the open photogrammetry software [MicMac](https://github.com/micmacIGN/micmac). 
 
-Note that `predict.src_las` may be any valid glob pattern (e.g. `/path/to/multiple_files/*.las`), in order to **predict on multiple files successively**.  
-If the lidar file doesn't specify an EPSG in its meatadata, it HAS TO BE be specified with `datamodule.epsg=...`
+It tackles large scale stereo matching for large frame aerial imagery and EHR Satellite stereo reconstruction. Our models are embedded into a hierachical multi-resolution pipeline where lower resolution surface reconstructions serve as a prior for the next level reconstruction. This strategy is robust and allows integrating hand-crafted similarity metrics like (ncc, census,...) for lower resolution low context matching. 
 
-## Run inference from sources
+To perform hierarchical matching using our similarity learning models, you need to: 
 
-In case you want to swicth to package-based inference, you will need to comment out the parameters that depends on local environment variables such as logger credentials and training data directory. You can do so by making a copy of your configuration file and commenting out the lines containing `oc.env` logic.
+* git clone our repository and install `micmac` and `MicMac V2` after downloading plateform specific [torch cpp libraries](). You may need to modifiy `TORCH_INSTALL_PREFIX` in CMakeLists.txt to point to  `libtorch` folder. For our installation, we set it to `${MMVII_SOURCE_DIR}/libtorch`
+* compile MMVII and micmac with libtorch 
+* MicMac uses `xml specifications` files for hierachical dense image matching, we provide an example xml configuration file:
+`
+<ParamMICMAC>
 
-## Run inference from within a docker image
+<DicoLoc>
+       <Symb> ZReg=0.005  </Symb>
+       <Symb> DefCor=0.4  </Symb>
+       <Symb> CostTrans=1.0 </Symb>
 
-Up to date docker images (named `myria3d`) are created via Github integration actions (see [Developer's guide](../guides/development.md).
+       <Symb> SzW=3 </Symb>
+       <Symb> PenteMax=3.0 </Symb>
+       <Symb> Interpol=eInterpolBiLin  </Symb>
+       <Symb> DoEpi=true </Symb>
+       <Symb> Ori=Epi    </Symb>
 
-A docker image encapsulating the virtual environment and application sources can also be built using the provided Dockerfile. At built time, the Dockerfile is not standalone and should be part of the repository - whose content is copied into the image - at the github reference you want to build from.
+       <Symb> Im=TEST   </Symb>
 
-To run inference: 
-- Mount the needed volumes with the `-v` option.
-- Always set `--ipc=host` to allow multithreading (used in pytorch dataloader, as mentionned in [Pytorch's README](https://github.com/pytorch/pytorch#using-pre-built-images)). 
-- Increase the shared memory with `--shm-size=2gb` (which should be enough for 1km*1km point French "Lidar HD" clouds).
-- Set `--gpus=all` to make gpus visible to the container if available.
+       <Symb> Im1=Im1DUBL.tif </Symb>
+       <Symb> Im2=Im2DUBL.tif </Symb>
 
-See [docker-pytorch README](https://github.com/anibali/docker-pytorch#running-pytorch-scripts) for more details plus an additional option to specify user id at runtime.
+       <Symb> Modele=XXX</Symb>
+       <Symb> WITH_MODELE=true </Symb>
+       <Symb> IncPix=100  </Symb>
+       <Symb> NbDirProg=7   </Symb>
+       <Symb> ExtImIn=tif   </Symb>
+       <Symb> Purge=true   </Symb>
+       <Symb> NbProc=4   </Symb>
+       <Symb> OnCuda=false</Symb>
+       <Symb> UseMLP=false</Symb>
+  <!-- Parametres calcule -->
+        
+        <Symb>  DirMEC=${Modele} </Symb>
+        <Symb>  DirPyram=Pyram/ </Symb>
 
-```bash
-# specify your paths here as needed
-docker run \
--v {local_inputs}:/inputs/ \
--v {local_output}:/outputs/ \
---ipc=host \
---gpus=all \
---shm-size=2gb \
-python run.py {...config paths & options...}
-```
+</DicoLoc>
 
-## Additional options for prediction
+<Section_Terrain> 
+      <IntervParalaxe>
+            <Px1IncCalc> ${IncPix} </Px1IncCalc>
+      </IntervParalaxe>
+      
+</Section_Terrain>
+
+<Section_PriseDeVue>
+
+   <GeomImages> eGeomImage_EpipolairePure </GeomImages> 
+
+   <Images>
+    	<Im1>   ${Im1} </Im1>
+    	<Im2>   ${Im2}    </Im2>
+   </Images>
+
+   <MasqImageIn>
+             <OneMasqueImage>
+                <PatternSel>  (.*)\.${ExtImIn}  </PatternSel>
+                <NomMasq>  $1_Masq.tif     </NomMasq>
+             </OneMasqueImage>
+             <AcceptNonExistingFile> true </AcceptNonExistingFile>
+   </MasqImageIn>
+
+</Section_PriseDeVue>
 
 
-### Output dimensions
+<!--  *************************************************************
+       Parametres fixant le comportement
+     de l'algo de mise en correspondance
+-->
+<Section_MEC>
+	<ChantierFullImage1> true </ChantierFullImage1>
 
-By default, the predicted classification is stored in a new `PredictedClassification` LAS dimension. The [entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory)) of probabilities is also stored in a new `entropy` LAS dimension. It can be used as a very limited proxy of uncertainty.
+	<EtapeMEC>
+    	    <DeZoom> -1 </DeZoom>
+    	    <ModeInterpolation> ${Interpol} </ModeInterpolation>
+		
+	    <!-- param correl -->
+	    <SzW> ${SzW} </SzW>
 
-Change params `predict.interpolator.predicted_classification_channel` and `predict.interpolator.entropy_channel` to change name of output dimensions. Set to `null` to disable saving these dimensions.
+            <AlgoRegul> eAlgo2PrgDyn </AlgoRegul>
 
-One can control for which classes to save the probabilities. This is achieved with a `predict.interpolator.probas_to_save` config parameter, which can be either the `all` keyword (to save probabilities for all classes) or a list of specific classes (e.g. `predict.interpolator.probas_to_save=[building,vegetation]` - note the absence of space between class names).
+	    <Px1Pas>        1  </Px1Pas>
+            <Px1DilatAlti>  7  </Px1DilatAlti>
+	    <Px1DilatPlani> 3  </Px1DilatPlani>
+	    <Px1Regul> ${ZReg} </Px1Regul>
 
-### Receptive field overlap at inference time
+            <GenImagesCorrel> true </GenImagesCorrel>
+	    
+            <SsResolOptim> 1 </SsResolOptim>
+            <CoxRoyUChar> false </CoxRoyUChar>
 
-To improve spatial regularity of the predicted probabilities, one can make inference on square receptive fields that have a non-null overlap with each other. This has the effect of smoothing out irregular predictions. The resulting classification is better looking, with more homogeneous predictions at the object level.
 
-To define an overlap between successive 50m*50m receptive fields, set `predict.subtile_overlap={value}`.
-This, however, comes with a large computation price. For instance, `predict.subtile_overlap=25` means a 25m overlap on both x and y axes, which multiplies inference time by a factor of 4.
+	    <ModulationProgDyn>
+               <EtapeProgDyn>
+            	   <ModeAgreg> ePrgDAgrSomme </ModeAgreg>
+                   <NbDir> ${NbDirProg} </NbDir>
+               </EtapeProgDyn>
+               <Px1PenteMax> ${PenteMax} </Px1PenteMax>
+               <ArgMaskAuto>
+            	   <ValDefCorrel> ${DefCor} </ValDefCorrel>
+		   <CostTrans> ${CostTrans} </CostTrans>
+                   <ReInjectMask> false </ReInjectMask> 
+               </ArgMaskAuto>
+            </ModulationProgDyn>
 
-### Ignoring artefacts points during inference
 
-Lidar acquisition may have produced artefacts points. If these points were identified with one (or several) classification code(s), they can be ignored during inference. These points will still be present in the output cloud, but will not negatively disturb model inference. They will keep their original class in the predicted classification dim. They will have null probas and entropy.
+    </EtapeMEC>
 
-In the configuration, data transforms are used to drop points with a class 65. By convention, 65 will flag Lidar artefacts points. Additional classes may be mapped to 65 to be ignored during inference as well, via the `dataset_description.classification_preprocessing_dict` parameter. Note: you may need to use quotes when overriding this parameter via CLI.
+	<!--  <EtapeMEC> <DeZoom> 16 </DeZoom> </EtapeMEC>	 -->
+    <!-- <EtapeMEC> <DeZoom> 64 </DeZoom> </EtapeMEC> 
+    <EtapeMEC> <DeZoom> 32 </DeZoom> </EtapeMEC>      -->
+    <EtapeMEC> <DeZoom> 16 </DeZoom> </EtapeMEC>
+    
+    
+	<EtapeMEC> <DeZoom> 8  </DeZoom> 
+            <CorrelAdHoc>
+                <SzBlocAH> 40000000 </SzBlocAH>
+                <TypeCAH>
+                    <ScoreLearnedMMVII >
+                        <FileModeleCost> MVCNNCorrel</FileModeleCost>
+                        <FileModeleParams>../MODEL_MSAFF_AERIAL_DECISION/.*.pt</FileModeleParams>
+                        <FileModeleArch>UnetMLPMatcher</FileModeleArch>
+                        <Cuda> ${OnCuda} </Cuda>
+			<UsePredicNet> ${UseMLP} </UsePredicNet>
+                    </ScoreLearnedMMVII>
+                </TypeCAH>
+            </CorrelAdHoc>
+       </EtapeMEC>
+  
+	<EtapeMEC> <DeZoom> 4  </DeZoom> 
+            <CorrelAdHoc>
+                <SzBlocAH> 40000000 </SzBlocAH>
+                <TypeCAH>
+                    <ScoreLearnedMMVII >
+                        <FileModeleCost> MVCNNCorrel</FileModeleCost>
+                        <FileModeleParams>../MODEL_MSAFF_AERIAL_DECISION/.*.pt</FileModeleParams>
+                        <FileModeleArch>UnetMLPMatcher</FileModeleArch>
+                        <Cuda> ${OnCuda} </Cuda>
+			<UsePredicNet> ${UseMLP} </UsePredicNet>
+                    </ScoreLearnedMMVII>
+                </TypeCAH>
+            </CorrelAdHoc>
+       </EtapeMEC>
+	<EtapeMEC> 
+        <DeZoom> 2  </DeZoom> 
+            <CorrelAdHoc>
+                <SzBlocAH> 40000000 </SzBlocAH>
+                <TypeCAH>
+                    <ScoreLearnedMMVII >
+                        <FileModeleCost> MVCNNCorrel</FileModeleCost>
+                        <FileModeleParams>../MODEL_MSAFF_AERIAL_DECISION/.*.pt</FileModeleParams>
+                        <FileModeleArch>UnetMLPMatcher</FileModeleArch>
+                        <Cuda> ${OnCuda} </Cuda>
+			<UsePredicNet> ${UseMLP} </UsePredicNet>
+                    </ScoreLearnedMMVII>
+                </TypeCAH>
+            </CorrelAdHoc>
+    </EtapeMEC>	
+    <EtapeMEC> 
+        <DeZoom> 1  </DeZoom> 
+            <CorrelAdHoc>
+                <SzBlocAH> 40000000 </SzBlocAH>
+                <TypeCAH>
+                    <ScoreLearnedMMVII >
+                        <FileModeleCost> MVCNNCorrel</FileModeleCost>
+                        <FileModeleParams>../MODEL_MSAFF_AERIAL_DECISION/.*.pt</FileModeleParams>
+                        <FileModeleArch>UnetMLPMatcher</FileModeleArch>
+                        <Cuda> ${OnCuda} </Cuda>
+			<UsePredicNet> ${UseMLP} </UsePredicNet>
+                    </ScoreLearnedMMVII>
+                </TypeCAH>
+            </CorrelAdHoc>
+        
+    </EtapeMEC>
+    
+   <!-- <EtapeMEC>
+        <DeZoom > 1 </DeZoom>
+        <Px1Pas>   0.5  </Px1Pas>
+    </EtapeMEC> -->
+
+    <EtapeMEC>
+            <DeZoom>  1  </DeZoom>
+            <Px1Pas>   1.0     </Px1Pas>
+            <AlgoRegul> eAlgoDequant </AlgoRegul>
+	</EtapeMEC> 
+        
+	<HighPrecPyrIm> false </HighPrecPyrIm>
+    
+	<TypePyramImage>
+               <Resol >    1          </Resol>
+               <DivIm>    1 </DivIm>
+               <TypeEl>  eFloat32Bits   </TypeEl>
+        </TypePyramImage>
+
+</Section_MEC>
+
+<!--  *************************************************************
+       Parametres fixant les resultats
+     devant etre produits par l'algo
+-->
+<Section_Results>
+    <GeomMNT> eGeomPxBiDim     </GeomMNT>
+    <ZoomMakeTA> 16 </ZoomMakeTA>
+    <GammaVisu> 2.0 </GammaVisu>
+    <ZoomVisuLiaison> -1 </ZoomVisuLiaison>
+    
+</Section_Results>
+
+<!--  *************************************************************
+       Parametres lies a la gestions
+     du "chantier" sur la machine
+-->
+<Section_WorkSpace>
+
+    <WorkDir> ThisDir </WorkDir> 
+    <TmpMEC> ${DirMEC}/ </TmpMEC>
+    <TmpResult> ${DirMEC}/ </TmpResult>
+    <TmpPyr> ${DirPyram} </TmpPyr>
+    <PurgeMECResultBefore>  ${Purge} </PurgeMECResultBefore>
+
+    <ByProcess>  ${NbProc} </ByProcess>
+
+    <AvalaibleMemory> 2048 </AvalaibleMemory>
+    <SzDalleMin> 540 </SzDalleMin>
+    <SzDalleMax> 512 </SzDalleMax>
+    <SzRecouvrtDalles> 20 </SzRecouvrtDalles>
+    <SzMinDecomposCalc> 40 </SzMinDecomposCalc>
+    <ComprMasque> eComprTiff_None </ComprMasque>
+
+
+</Section_WorkSpace>
+
+<Section_Vrac> 
+     <DebugMM> true</DebugMM>
+</Section_Vrac>
+
+</ParamMICMAC>
+`
+* The aformentionned xml file activates our models from `Zoom 4`, i.e models are in charge of reconstruction for zooms: 4,2,1.
+This is accomplished with and adhoc correlation that calls a set of .pt models (feature extraction + mlp).
+`
+            <CorrelAdHoc>
+                <SzBlocAH> 40000000 </SzBlocAH>
+                <TypeCAH>
+                    <ScoreLearnedMMVII >
+                        <FileModeleCost> MVCNNCorrel</FileModeleCost>
+                        <FileModeleParams>../MODEL_MSAFF_AERIAL_DECISION/.*.pt</FileModeleParams>
+                        <FileModeleArch>UnetMLPMatcher</FileModeleArch>
+                        <Cuda> ${OnCuda} </Cuda>
+			            <UsePredicNet> ${UseMLP} </UsePredicNet>
+                    </ScoreLearnedMMVII>
+                </TypeCAH>
+            </CorrelAdHoc>
+`
+* Parametrization: To launch stereo matching between a pair of epipolar images,
+
+`mm3d MICMAC File.xml +Im1=Im1.tif +Im2=Im2.tif  +DirMEC=MEC/ +OnCuda=0 +UsePredicNet=1`
+
+
+

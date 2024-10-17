@@ -4,7 +4,7 @@
 
 Package version follows semantic versionning conventions and is defined in `simlearner3d._version.py`.
 
-Releases are created when new high-level functionnality are implemented (e.g. a new step in the production process), with a documentation role. A `prod-release-tag` is created that tracks an _arbitrary_ commit, and serves as a mean to make a few models, model card, and config accessible via its associated [release](https://github.com/IGNF/myria3d/releases/tag/prod-release-tag).
+Releases are created when new high-level functionnality are implemented (e.g. a new step in the production process), with a documentation role. A `prod-release-tag` is created that tracks an _arbitrary_ commit, and serves as a mean to make a few models, model card, and config accessible via its associated [release](https://github.com/DaliCHEBBI/simlearner3d/releases/tag/prod-release-tag).
 
 ## Tests
 

@@ -17,18 +17,17 @@ To test your setup and logging capabilities, you can try overfitting on a single
 To overfit on a single batch for 30 epochs, run:
 
 ```bash
-python run.py experiment=RandLaNet-Overfit
+python run.py experiment=MSAFFDebug
 ```
 
 ## Training
 
-Define your experiment hyperparameters in an experiment file in the `configs/experiment` folder. You may stem from one of the provided experiment file (e.g. `RandLaNet_base_run_FR.yaml`). In particular, you will need to define `dataset_description` to specify your classification task - see config `20220607_151_dalles_proto.yaml` for an example.
+Define your experiment hyperparameters in an experiment file in the `configs/experiment` folder. You may stem from one of the provided experiment file (e.g. `MSAFF_base_run_FR.yaml`).
 
-
-To run the full training and validation for French Lidar HD, run:
+To run a typically nominal training,validation and testing, run:
 
 ```bash
-python run.py experiment=RandLaNet_base_run_FR
+python run.py experiment=MSAFF_base_run_FR
 ```
 
 After training, you model best checkpoints and hydra config will be saved in a `DATE/TIME/` subfolder of the `LOGS_DIR` you specified, with an associated hydra `config.yaml`.
@@ -40,14 +39,14 @@ You can perfom this automatically before training by setting `task.auto_lr_find=
 
 ### Multi-GPUs
 
-Multi-GPUs training is supported. Refer to e.g. experiment file `RandLaNet_base_run_FR-MultiGPU.yaml` for pytorch lightning flags to activate it. 
+Multi-GPUs training is supported. Refer to e.g. experiment file `MSAFF_base_run_FR-MultiGPU.yaml` for pytorch lightning flags to activate it. 
 Multi-GPUs training effectively reduces training time by the number of GPUs used. Batch size might need to be reduced to keep a constant number of steps per epoch in DDP.
 
 ## Testing the model
 
 Test will be automatically performed after each training, using best checkpointeded model.
 
-To manually evaluate per-class IoU on the test set, run:
+To manually evaluate models performances, run:
 
 ```bash
 python run.py \

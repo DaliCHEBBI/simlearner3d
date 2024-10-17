@@ -13,7 +13,7 @@ hydra:
 
 datamodule:
   # override if needed
-  # test_data_dir: "path/to_dir/with/annotated/files.las"
+  # test_data_dir: 
   # larger batch size for speed
   batch_size: 50 
 

@@ -18,3 +18,16 @@ class MaskedTripletLoss:
                                  occlusion_masq
                                     )
         
+
+class SimpleTripletLoss:
+    def __init__(self,margin=0.3):
+        self.margin=margin
+    def compute_loss(self,anchor, positive, negative):
+        return torch.clamp_min(F.cosine_similarity(anchor,negative)
+                                   - F.cosine_similarity(anchor,positive)
+                                   +self.margin,0)
+    def __call__(self,anchor,positive,negative,) -> torch.Tensor:
+        return self.compute_loss(anchor,
+                                 positive,
+                                 negative
+                                    )
