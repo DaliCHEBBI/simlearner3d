@@ -392,3 +392,6 @@ def TestMSNet(net, test_loader, device,nans=-999.0):
         Simsplus.append(simP.numpy())
         Simsmoins.append(simN.numpy())
     return Simsplus,Simsmoins
+
+
+
