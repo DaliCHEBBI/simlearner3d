@@ -176,7 +176,8 @@
     <span class="n">FINETUNE</span> <span class="o">=</span> <span class="s2">&quot;finetune&quot;</span>
     <span class="n">PREDICT</span> <span class="o">=</span> <span class="s2">&quot;predict&quot;</span>
     <span class="n">HDF5</span> <span class="o">=</span> <span class="s2">&quot;create_hdf5&quot;</span>
-    <span class="n">EXTRACT</span> <span class="o">=</span><span class="s2">&quot;extract_pt&quot;</span></div>
+    <span class="n">EXTRACT</span> <span class="o">=</span><span class="s2">&quot;extract_pt&quot;</span>
+    <span class="n">QUALIFY</span> <span class="o">=</span><span class="s2">&quot;qualify&quot;</span></div>
 
 <span class="n">DEFAULT_TASK</span> <span class="o">=</span> <span class="n">TASK_NAMES</span><span class="o">.</span><span class="n">FIT</span><span class="o">.</span><span class="n">value</span>
 <span class="n">TASK_NAME_DETECTION_STRING</span> <span class="o">=</span> <span class="s2">&quot;task.task_name=&quot;</span>
@@ -247,6 +248,22 @@
     <span class="p">)</span></div>
 
 
+<div class="viewcode-block" id="launch_qualify"><a class="viewcode-back" href="../apidoc/scripts.html#run.launch_qualify">[docs]</a><span class="nd">@hydra</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="n">config_path</span><span class="o">=</span><span class="s2">&quot;configs/&quot;</span><span class="p">,</span> <span class="n">config_name</span><span class="o">=</span><span class="s2">&quot;config.yaml&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">launch_qualify</span><span class="p">(</span>
+    <span class="n">config</span><span class="p">:</span><span class="n">DictConfig</span>
+<span class="p">):</span>  <span class="c1"># pragma: no cover  (it&#39;s just an initialyzer of a class/method tested elsewhere)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Training, evaluation, testing, or finetuning of a neural network.&quot;&quot;&quot;</span>
+    <span class="c1"># Imports should be nested inside @hydra.main to optimize tab completion</span>
+    <span class="c1"># Read more here: https://github.com/facebookresearch/hydra/issues/934</span>
+    <span class="kn">from</span> <span class="nn">simlearner3d.qualify</span> <span class="kn">import</span> <span class="n">qualify</span>
+    <span class="n">utils</span><span class="o">.</span><span class="n">extras</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+     <span class="c1"># Pretty print config using Rich library</span>
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;print_config&quot;</span><span class="p">):</span>
+        <span class="n">utils</span><span class="o">.</span><span class="n">print_config</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">resolve</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">qualify</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>   </div>
+    
+
+
 <span class="k">if</span> <span class="vm">__name__</span><span class="o">==</span><span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
     <span class="n">task_name</span> <span class="o">=</span> <span class="s2">&quot;fit&quot;</span>
     <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">:</span>
@@ -268,6 +285,10 @@
     <span class="k">elif</span> <span class="n">task_name</span> <span class="o">==</span> <span class="n">TASK_NAMES</span><span class="o">.</span><span class="n">EXTRACT</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
         <span class="n">dotenv</span><span class="o">.</span><span class="n">load_dotenv</span><span class="p">(</span><span class="n">override</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">launch_extract</span><span class="p">()</span>
+
+    <span class="k">elif</span> <span class="n">task_name</span> <span class="o">==</span> <span class="n">TASK_NAMES</span><span class="o">.</span><span class="n">QUALIFY</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
+        <span class="n">dotenv</span><span class="o">.</span><span class="n">load_dotenv</span><span class="p">(</span><span class="n">override</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">launch_qualify</span><span class="p">()</span>
 
     <span class="k">else</span><span class="p">:</span>
         <span class="n">choices</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">TASK_NAMES</span><span class="p">)</span>
