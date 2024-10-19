@@ -18,6 +18,7 @@ class TASK_NAMES(Enum):
     PREDICT = "predict"
     HDF5 = "create_hdf5"
     EXTRACT ="extract_pt"
+    QUALIFY ="qualify"
 
 DEFAULT_TASK = TASK_NAMES.FIT.value
 TASK_NAME_DETECTION_STRING = "task.task_name="
@@ -88,6 +89,22 @@ def launch_hdf5(config: DictConfig):
     )
 
 
+@hydra.main(config_path="configs/", config_name="config.yaml")
+def launch_qualify(
+    config:DictConfig
+):  # pragma: no cover  (it's just an initialyzer of a class/method tested elsewhere)
+    """Training, evaluation, testing, or finetuning of a neural network."""
+    # Imports should be nested inside @hydra.main to optimize tab completion
+    # Read more here: https://github.com/facebookresearch/hydra/issues/934
+    from simlearner3d.qualify import qualify
+    utils.extras(config)
+     # Pretty print config using Rich library
+    if config.get("print_config"):
+        utils.print_config(config, resolve=False)
+    return qualify(config)   
+    
+
+
 if __name__=="__main__":
     task_name = "fit"
     for arg in sys.argv:
@@ -109,6 +126,10 @@ if __name__=="__main__":
     elif task_name == TASK_NAMES.EXTRACT.value:
         dotenv.load_dotenv(override=True)
         launch_extract()
+
+    elif task_name == TASK_NAMES.QUALIFY.value:
+        dotenv.load_dotenv(override=True)
+        launch_qualify()
 
     else:
         choices = ", ".join(task.value for task in TASK_NAMES)
