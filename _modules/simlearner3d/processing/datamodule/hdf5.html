@@ -325,25 +325,7 @@
                           <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                           <span class="n">num_workers</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                           <span class="n">prefetch_factor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">prefetch_factor</span><span class="p">,</span>
-                          <span class="p">)</span></div>
-
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;def _set_predict_data(self, las_file_to_predict):</span>
-<span class="sd">        self.predict_dataset = InferenceDataset(</span>
-<span class="sd">            las_file_to_predict,</span>
-<span class="sd">            self.epsg,</span>
-<span class="sd">            points_pre_transform=self.points_pre_transform,</span>
-<span class="sd">            pre_filter=self.pre_filter,</span>
-<span class="sd">            transform=self.predict_transform,</span>
-<span class="sd">            tile_width=self.tile_width,</span>
-<span class="sd">            subtile_overlap=self.subtile_overlap_predict,</span>
-<span class="sd">        )</span>
-
-<span class="sd">    def predict_dataloader(self):</span>
-<span class="sd">        return DataLoader(self.predict_dataset,</span>
-<span class="sd">                          batch_size=self.batch_size,</span>
-<span class="sd">                          num_workers=1,</span>
-<span class="sd">                          prefetch_factor=self.prefetch_factor,</span>
-<span class="sd">                          )&quot;&quot;&quot;</span></div>
+                          <span class="p">)</span></div></div>
     
 </pre></div>
 
