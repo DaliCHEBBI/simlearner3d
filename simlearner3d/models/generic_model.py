@@ -285,6 +285,7 @@ class Model(LightningModule):
     
     def forward(self,x):
         f_all=self.feature(x)
+        # shape 2,64,w,h
         if self.mode==DEFAULT_MODE:
             return f_all
         ref_other=torch.cat((f_all[0].unsqueeze(0),f_all[1].unsqueeze(0)),1)

@@ -1,39 +1,48 @@
-import os, sys
+import copy
+import os
+import hydra
 import argparse
 from pathlib import Path
 import typing
-import torch
 import numpy as np
 import matplotlib.pyplot as plt
 import torch.nn.functional as F
 import gc
-#from matplotlib.ticker import FormatStrFormatter,ScalarFormatter,MaxNLocator,FuncFormatter
 
+from omegaconf import DictConfig
+from pytorch_lightning import (
+    LightningModule,
+    LightningDataModule,
+)
+import torch
+from torch import nn
+from simlearner3d.models.generic_model import Model
 
-def PlotJointDistribution(Simsplus,Simsmoins,which):
+from simlearner3d.models.modules.msaff import MSNet,MSNETInferenceGatedAttention
+from simlearner3d.models.modules.unet import UNet,UNetInference
+from simlearner3d.models.modules.unetgatedattention import UNetGatedAttention, UNetInferenceGatedAttention
+from simlearner3d.models.modules.decision_net import DecisionNetworkOnCube
+from simlearner3d.utils import utils
+
+log = utils.get_logger(__name__)
+
+NEURAL_NET_ARCHITECTURE_CONFIG_GROUP = "neural_net"
+
+MODEL_ZOO = [MSNet,UNet,UNetGatedAttention]
+MODEL_INFERENCE_ZOO=[MSNETInferenceGatedAttention,UNetInference,UNetInferenceGatedAttention]
+
+DEFAULT_MODE="feature"
+
+def PlotJointDistribution(Simsplus,
+                          Simsmoins,
+                          model,
+                          model_ckpt_path,
+                          output_folder,
+                          ):
     import pandas as pd
     import matplotlib.patches as  mpatches
     import matplotlib.cm as cm
     import seaborn as sns
-    """
-    fig,ax = plt.subplots(figsize=(6,6),gridspec_kw={'wspace':0.1,'hspace':0.1})
-    ax.spines['right'].set_visible(True)
-    ax.spines['left'].set_visible(True)
-    ax.spines['bottom'].set_visible(True)
-    ax.spines['top'].set_visible(True)
-    ax.spines['right'].set_linewidth(0.5)
-    ax.spines['left'].set_linewidth(0.5)
-    ax.spines['bottom'].set_linewidth(0.5)
-    ax.spines['top'].set_linewidth(0.5)
-    ax.tick_params(axis='both', which='major', labelsize=10)
-    ax.tick_params(axis='both', which='minor', labelsize=10)
-    ax.tick_params(bottom=True, top=True, left=True, right=True, direction='in')
-    Jp,yedges,xedges=np.histogram2d(Simsplus,Simsmoins,bins=200,weights=np.ones(len(Simsplus))/len(Simsplus),density=True)
-    print(Jp)
-    plt.xlim([0, 1.0])
-    plt.ylim([0, 1.0])
-    plt.imshow(Jp)
-    plt.show()"""
     Simsplus=np.expand_dims(Simsplus, axis=1)
     Simsmoins=np.expand_dims(Simsmoins, axis=1)
     Simall=np.concatenate((Simsplus,Simsmoins),axis=1)
@@ -59,7 +68,7 @@ def PlotJointDistribution(Simsplus,Simsmoins,which):
                     #n_levels=50,
                     cbar=True,
                     #cbar_kws={"use_gridspec":False, "location":"top"},
-                    label='{} Module KDE'.format(which)
+                    label='Module KDE'
                     )
     plt.subplots_adjust(left=0.1, right=0.83, top=0.9, bottom=0.1)
     pos_joint_ax = g.ax_joint.get_position()
@@ -88,17 +97,22 @@ def PlotJointDistribution(Simsplus,Simsmoins,which):
     #g.ax_joint.xaxis.tick_top()
     values= g.ax_joint.collections[0].get_array()
     values=np.reshape(values, (200,200))
-    #xy_ = g.ax_joint.collections[0]
-    #print(xy_)
     SUM_GOOD=0.0
     for j in range(200):
         for i in range(j+1):
             if (values[j,i]!='--'):
                 SUM_GOOD+=values[j,i]   
-    pourcent=str("%.2f" % SUM_GOOD)+" %"            
-    handles = [mpatches.Patch(facecolor=plt.cm.jet(255), label='{} : {}'.format(which,pourcent))]
+    pourcent=str("%.2f" % SUM_GOOD)+" %"       
+
+    _NAME_OUT=model.feature.__name__
+    if model.mode!=DEFAULT_MODE:
+        _NAME_OUT+="_MLP"
+    NAME_EPOCH=os.path.basename(model_ckpt_path)[:-5]
+    handles = [mpatches.Patch(facecolor=plt.cm.jet(255), label='{} : {}'.format(_NAME_OUT,pourcent))]
     g.ax_joint.legend(handles=handles,loc=4)
-    plt.savefig('jp_{}.svg'.format(which),format="svg")
+    plt.savefig("{}/{}_{}".format(output_folder,
+                                  _NAME_OUT,
+                                 NAME_EPOCH)+".svg")
 
 
 def ComputeAreabetweencurves(CurveSet1,CurveSet2):
@@ -123,8 +137,6 @@ def ComputeAreaRationPositiveNegative(CurveSet1,CurveSet2,BIN):
          # Get surface between both bins 
          x1,y1,x2,y2=CurveSet1[i][0],CurveSet1[i][1],CurveSet1[i+1][0],CurveSet1[i+1][1]
          xx1,yy1,xx2,yy2=CurveSet2[i][0],CurveSet2[i][1],CurveSet2[i+1][0],CurveSet2[i+1][1]
-         #print('offsets between both surfaces ',x1,xx1,y1,yy1)
-         #print('offsets between both surfaces ',x2,xx2,y2,yy2)
          Surface1=(x2-x1)*(y1+y2)*0.5
          Surface2=(xx2-xx1)*(yy1+yy2)*0.5
          SurfacePositive.append(Surface1)
@@ -202,13 +214,8 @@ def ComputeSurfacesIntersection(CurveSet1,CurveSet2):
          SurfaceIntersection.append(np.maximum(Surface2,Surface1)-np.abs(Surface2-Surface1))
          SurfaceUnion.append(np.maximum(Surface2,Surface1))
     # likelihood
-    """IOU=[a/b for a,b in zip(SurfaceIntersection,SurfaceUnion)]
-    print("IOU OF SURFACES   ==>  ",IOU)
-    return IOU"""
     IOU=np.asarray(SurfaceIntersection)/np.sum(SurfaceUnion)
     IOU.tofile("./IOU_UNETATT.bin")
-    print("IOU   =====>>>>>   ",IOU)
-    #return np.sum(SurfaceIntersection)/np.sum(SurfaceUnion)
 
 def ROCCurveAuc(Simplus,Simminus):
     from sklearn import metrics
@@ -228,170 +235,213 @@ def ROCCurveAuc(Simplus,Simminus):
     print("SHAPE OF FPR UNETATT  ====>  ",fpr.shape)
     print("AUC UNETATT     =====>  ",AUC)
 
-def testing_step_dense(batch,modulems):  
-    false1=2
-    false2=40
-    x0,x1,dispnoc0,Mask0,x_offset=batch
-    # ADD DIM 1
-    dispnoc0=dispnoc0.unsqueeze(1).cuda()
-    Mask0=Mask0.unsqueeze(1).cuda()
 
-    #print("initial shapes ", x0.shape,x1.shape,dispnoc0.shape,Mask0.shape)
-    dispnoc0=dispnoc0*Mask0.float() # Set Nans to 0.0
-    #print("Disparity shaope ",dispnoc0.shape)
-    # Forward
-    FeatsL=modulems.feature(x0.cuda()) 
-    FeatsR=modulems.feature(x1.cuda())
-    Offset_neg=((false1 - false2) * torch.rand(dispnoc0.size()).cuda() + false2)
-    RandSens=torch.rand(dispnoc0.size()).cuda()
-    RandSens=((RandSens < 0.5).float()+(RandSens >= 0.5).float()*(-1.0)).cuda()
+def testing_step_dense(batch,
+                       modulems,
+                       device, 
+                       nans=0.0, 
+                       false1=2, 
+                       false2=40
+                       ):
+        
+    x0,x1,dispnoc0,Mask0,x_offset=batch
+
+    MaskDef=(dispnoc0!=nans)
+    
+    FeatsL=modulems.feature(x0.to(device)) 
+    
+    FeatsR=modulems.feature(x1.to(device))
+    
+    Offset_neg=((false1 - false2) * torch.rand(dispnoc0.size()) + false2)
+    
+    RandSens=torch.rand(dispnoc0.size())
+    
+    RandSens=((RandSens < 0.5).float()+(RandSens >= 0.5).float()*(-1.0))
+    
     Offset_neg=Offset_neg*RandSens
+    
     #dispnoc0=torch.nan_to_num(dispnoc0, nan=0.0)
     D_pos=dispnoc0
     D_neg=dispnoc0+Offset_neg
-    Index_X=torch.arange(0,dispnoc0.size()[-1]).cuda()
+    
+    Index_X=torch.arange(0,dispnoc0.size()[-1])
     Index_X=Index_X.expand(dispnoc0.size()[-2],dispnoc0.size()[-1]).unsqueeze(0).unsqueeze(0).repeat_interleave(x0.size()[0],0)
-    #print("INDEX SHAPE   ",Index_X.shape )
-    # ADD OFFSET
-    #print(x_offset.unsqueeze(0).T.shape)
-    Index_X=Index_X.add(x_offset.cuda().unsqueeze(0).T.unsqueeze(2).unsqueeze(3))
-    #print("Index SHAPE ", Index_X.shape)
+
+    Index_X=Index_X.add(x_offset.unsqueeze(0).T.unsqueeze(2).unsqueeze(3))
+    
     Offp=Index_X-D_pos.round()  
     Offn=Index_X-D_neg.round() 
-    #print("offsets shapes ", Offp.shape, Offn.shape)
-    # Clean Indexes so there is no overhead 
-    MaskOffPositive=((Offp>=0)*(Offp<FeatsR.size()[-1])).float().cuda()
-    MaskOffNegative=((Offn>=0)*(Offn<FeatsR.size()[-1])).float().cuda()
-    # Cleaned Offp and Offn
+
+    MaskOffPositive=((Offp>=0)*(Offp<FeatsR.size()[-1])).float()
+    MaskOffNegative=((Offn>=0)*(Offn<FeatsR.size()[-1])).float()
+
     Offp=(Offp*MaskOffPositive).to(torch.int64)
     Offn=(Offn*MaskOffNegative).to(torch.int64)
-    # Need to repeat interleave 
+
     Offp=Offp.repeat_interleave(FeatsR.size()[1],1)
     Offn=Offn.repeat_interleave(FeatsR.size()[1],1)
-    # Get Examples positive and negative 
+
     FeatsR_plus=torch.gather(FeatsR,-1,Offp)
-    # Test gather operator 
+
     FeatsR_minus=torch.gather(FeatsR,-1,Offn)
-    # Mask Global = Mask des batiments + Mask des offsets bien definis 
-    MaskGlob=Mask0*MaskOffPositive*MaskOffNegative
-    ref_pos=modulems.decisionNet(torch.cat((FeatsL,FeatsR_plus),1))
-    ref_neg=modulems.decisionNet(torch.cat((FeatsL,FeatsR_minus),1))
-    ref_pos=F.sigmoid(ref_pos)
-    ref_neg=F.sigmoid(ref_neg)
-    simplus=torch.masked_select(ref_pos, MaskGlob.bool())
-    simmins=torch.masked_select(ref_neg, MaskGlob.bool())
+
+    MaskGlob=Mask0*MaskDef*MaskOffPositive
+
+    if modulems.mode==DEFAULT_MODE:
+        simplus=F.cosine_similarity(FeatsL, FeatsR_plus).unsqueeze(1)
+        simmins=F.cosine_similarity(FeatsL, FeatsR_minus).unsqueeze(1)
+        simplus=torch.masked_select(simplus, MaskGlob.bool())
+        simmins=torch.masked_select(simmins, MaskGlob.bool())
+    else:
+        ref_pos=modulems.decisionNet(torch.cat((FeatsL,FeatsR_plus),1))
+        ref_neg=modulems.decisionNet(torch.cat((FeatsL,FeatsR_minus),1))
+        ref_pos=F.sigmoid(ref_pos)
+        ref_neg=F.sigmoid(ref_neg)
+        simplus=torch.masked_select(ref_pos, MaskGlob.bool())
+        simmins=torch.masked_select(ref_neg, MaskGlob.bool())
     return simplus.squeeze().cpu().detach(),simmins.squeeze().cpu().detach()
 
-def testing_step_DFC(batch,modulems,device,NANS=-999.0):
-    true1=1
-    false1=2
-    false2=8
-    x0,x1,dispnoc0=batch
-    dispnoc0=dispnoc0.to(device)
-    Mask0=(dispnoc0!=NANS).float().to(device)  # NAN=-999.0
-    dispnoc0[dispnoc0==NANS]=0.0 # Set Nans to 0.0
-    # Forward
-    FeatsL=modulems(x0.to(device)) 
-    FeatsR=modulems(x1.to(device))
-    Offset_pos=(-2*true1) * torch.rand(dispnoc0.size(),device=device) + true1 #[-true1,true1]
-    Offset_neg=((false1 - false2) * torch.rand(dispnoc0.size(),device=device) + false2)
-    RandSens=torch.rand(dispnoc0.size(),device=device)
-    RandSens=((RandSens < 0.5).float()+(RandSens >= 0.5).float()*(-1.0)).to(device)
-    Offset_neg=Offset_neg*RandSens
-    #dispnoc0=torch.nan_to_num(dispnoc0, nan=0.0)
-    D_pos=dispnoc0+Offset_pos
-    D_neg=dispnoc0+Offset_neg
-    Index_X=torch.arange(0,dispnoc0.size()[-1],device=device)
-    Index_X=Index_X.expand(dispnoc0.size()[-2],dispnoc0.size()[-1]).unsqueeze(0).unsqueeze(0).repeat_interleave(x0.size()[0],0)
-    Offp=Index_X-D_pos.round()  
-    Offn=Index_X-D_neg.round() 
-    # Clean Indexes so there is no overhead 
-    MaskOffPositive=((Offp>=0)*(Offp<dispnoc0.size()[-1])).float().to(device) 
-    MaskOffNegative=((Offn>=0)*(Offn<dispnoc0.size()[-1])).float().to(device) 
-    # Cleaned Offp and Offn
-    Offp=(Offp*MaskOffPositive).to(torch.int64)
-    Offn=(Offn*MaskOffNegative).to(torch.int64)
-    # Need to repeat interleave 
-    Offp=Offp.repeat_interleave(FeatsR.size()[1],1)
-    Offn=Offn.repeat_interleave(FeatsR.size()[1],1)
-    # Get Examples positive and negative 
-    FeatsR_plus=torch.gather(FeatsR,-1,Offp)
-    # Test gather operator
-    FeatsR_minus=torch.gather(FeatsR,-1,Offn)
-    # Mask Global = Mask des batiments + Mask des offsets bien definis
-    MaskGlob=Mask0*MaskOffPositive*MaskOffNegative
-    # Save maks global 
-    simplus=F.cosine_similarity(FeatsL, FeatsR_plus).unsqueeze(1)
-    simmins=F.cosine_similarity(FeatsL, FeatsR_minus).unsqueeze(1)
-    simplus=torch.masked_select(simplus, MaskGlob.bool())
-    simmins=torch.masked_select(simmins, MaskGlob.bool())
-    return simplus.squeeze().cpu().detach(),simmins.squeeze().cpu().detach()
 
-def testing_step_dense_COSINE(batch,modulems):
-    false1=2
-    false2=6
-    x0,x1,dispnoc0,Mask0,x_offset=batch
-    # ADD DIM 1
-    dispnoc0=dispnoc0.unsqueeze(1).cuda()
-    Mask0=Mask0.unsqueeze(1).cuda()
 
-    #print("initial shapes ", x0.shape,x1.shape,dispnoc0.shape,Mask0.shape)
-    dispnoc0=dispnoc0*Mask0.float() # Set Nans to 0.0
-    #print("Disparity shaope ",dispnoc0.shape)
-    # Forward
-    FeatsL=modulems.feature(x0.cuda()) 
-    FeatsR=modulems.feature(x1.cuda())
-    Offset_neg=((false1 - false2) * torch.rand(dispnoc0.size()).cuda() + false2)
-    RandSens=torch.rand(dispnoc0.size()).cuda()
-    RandSens=((RandSens < 0.5).float()+(RandSens >= 0.5).float()*(-1.0)).cuda()
-    Offset_neg=Offset_neg*RandSens
-    #dispnoc0=torch.nan_to_num(dispnoc0, nan=0.0)
-    D_pos=dispnoc0
-    D_neg=dispnoc0+Offset_neg
-    Index_X=torch.arange(0,dispnoc0.size()[-1]).cuda()
-    Index_X=Index_X.expand(dispnoc0.size()[-2],dispnoc0.size()[-1]).unsqueeze(0).unsqueeze(0).repeat_interleave(x0.size()[0],0)
-    #print("INDEX SHAPE   ",Index_X.shape )
-    # ADD OFFSET
-    #print(x_offset.unsqueeze(0).T.shape)
-    Index_X=Index_X.add(x_offset.cuda().unsqueeze(0).T.unsqueeze(2).unsqueeze(3))
-    #print("Index SHAPE ", Index_X.shape)
-    Offp=Index_X-D_pos.round()  
-    Offn=Index_X-D_neg.round() 
-    #print("offsets shapes ", Offp.shape, Offn.shape)
-    # Clean Indexes so there is no overhead 
-    MaskOffPositive=((Offp>=0)*(Offp<FeatsR.size()[-1])).float().cuda()
-    MaskOffNegative=((Offn>=0)*(Offn<FeatsR.size()[-1])).float().cuda()
-    # Cleaned Offp and Offn
-    Offp=(Offp*MaskOffPositive).to(torch.int64)
-    Offn=(Offn*MaskOffNegative).to(torch.int64)
-    # Need to repeat interleave 
-    Offp=Offp.repeat_interleave(FeatsR.size()[1],1)
-    Offn=Offn.repeat_interleave(FeatsR.size()[1],1)
-    # Get Examples positive and negative 
-    FeatsR_plus=torch.gather(FeatsR,-1,Offp)
-    # Test gather operator 
-    FeatsR_minus=torch.gather(FeatsR,-1,Offn)
-    # Mask Global = Mask des batiments + Mask des offsets bien definis 
-    MaskGlob=Mask0*MaskOffPositive*MaskOffNegative
-    simplus=F.cosine_similarity(FeatsL, FeatsR_plus).unsqueeze(1)
-    simmins=F.cosine_similarity(FeatsL, FeatsR_minus).unsqueeze(1)
-    simplus=torch.masked_select(simplus, MaskGlob.bool())
-    simmins=torch.masked_select(simmins, MaskGlob.bool())
-    return simplus.squeeze().cpu().detach(),simmins.squeeze().cpu().detach()
-
-def TestMSNet(net, test_loader, device,nans=-999.0):
+def run_stats(net, test_loader, device,nans=0.0):
     torch.no_grad()
     net.eval()
     Simsplus=[]
     Simsmoins=[]
     for _, batch in enumerate(test_loader, 0):
-        simP,simN=testing_step_dense(batch,net,device,nans)
+        simP,simN=testing_step_dense(batch,
+                                     net,
+                                     device,
+                                     nans)
         gc.collect()
-        print("Sizes of Simplus ",simP.shape)
+        print("Sizes of matching similarity tile ",simP.shape)
         # compute loss
         Simsplus.append(simP.numpy())
         Simsmoins.append(simN.numpy())
     return Simsplus,Simsmoins
 
+def _intersection_curve(Simsplus,
+                        Simsmoins,
+                        model,
+                        model_ckpt_path,
+                        output_folder):
+    
+    fig1=plt.figure()
+
+    Histplus,Histplusbins=np.histogram(Simsplus,
+                                       bins=200,
+                                       density=True,
+                                       normed=True)
+
+    Histmoins,Histmoinsbins=np.histogram(Simsmoins,
+                                         bins=200,
+                                         density=True,
+                                         normed=True)
+
+    plt.rcParams.update({'font.size': 10})
+    plt.plot(Histplusbins[1:],
+             Histplus, 
+             label='Prob. mass of positive samples'
+             )
+    plt.plot(Histmoinsbins[1:],
+             Histmoins, 
+             label='Prob. mass of negative samples'
+             )
+    PourcentageIntersection=ComputeAreabetweencurves(list(tuple(zip(Histplusbins, Histplus))),
+                                                     list(tuple(zip(Histmoinsbins, Histmoins))))
+    
+    ROCCurveAuc(Simsplus,Simsmoins)
+
+    plt.fill_between(Histplusbins[1:], Histplus, step="pre", alpha=0.2)
+    plt.fill_between(Histmoinsbins[1:], Histmoins, step="pre", alpha=0.2)
+    Histplus=np.cumsum(Histplus*np.diff(Histplusbins))
+    Histmoins=np.cumsum(Histmoins*np.diff(Histmoinsbins))
+
+    plt.vlines(x=np.mean(Simsplus),
+                ymin=0, 
+                ymax=3.0, 
+                colors='blue', 
+                ls=':', 
+                lw=2, 
+                label='mean+ ='+"{:.2f}".format(np.mean(Simsplus))
+                )
+    plt.vlines(x=np.mean(Simsmoins),
+                ymin=0, 
+                ymax=3.0, 
+                colors='orange', 
+                ls=':', 
+                lw=2, 
+                label='mean- ='+"{:.2f}".format(np.mean(Simsmoins))
+                )
+    plt.xlabel("Similarity values")
+    plt.ylabel("Count Number (%)")
+
+    _NAME_OUT=model.feature.__name__
+    if model.mode!=DEFAULT_MODE:
+        _NAME_OUT+="_MLP"
+    NAME_EPOCH=os.path.basename(model_ckpt_path)[:-5]
+    plt.title(_NAME_OUT+"_{:.2f}%".format(PourcentageIntersection*100))
+    #legend_properties = {'weight':'bold'}
+    plt.legend(fontsize=10)
+    plt.savefig("{}/{}_{}_Surf_{:.2f}%".format(output_folder,
+                                            _NAME_OUT,
+                                            NAME_EPOCH,
+                                            PourcentageIntersection*100)+".png")
 
 
+def qualify(config: DictConfig):
+    
+    """
+    Computes :
+      - joint probability distributions of matching and non matching pixels after training
+      - ROC curves 
+
+    """
+    # Set seed for random number generators in pytorch, numpy and python.random
+    # Init lightning datamodule
+    log.info(f"Instantiating datamodule <{config.datamodule._target_}>")
+    datamodule: LightningDataModule = hydra.utils.instantiate(config.datamodule)
+
+
+    log.info(f"Instantiating model <{config.model._target_}>")
+    model: LightningModule = hydra.utils.instantiate(config.model)
+
+    log.info("Extracting models architectures for inference!")
+    # Instantiates the Model but overwrites everything with current config,
+    # except module related params (nnet architecture)
+    kwargs_to_override = copy.deepcopy(model.hparams)
+    kwargs_to_override.pop(
+        NEURAL_NET_ARCHITECTURE_CONFIG_GROUP, None
+    )  # removes that key if it's there
+    model = Model.load_from_checkpoint(config.model.ckpt_path, **kwargs_to_override)
+
+    # Data loader for testing 
+    test_dataloader=datamodule.test_dataloader
+    device=torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+    Simsplus, Simsmoins=run_stats(model,test_dataloader,device,nans=0.0)
+    Simsplus=np.concatenate(Simsplus, axis=0 )
+    Simsmoins=np.concatenate(Simsmoins, axis=0 )
+
+    # intersection curve 
+    _intersection_curve(Simsplus,
+                        Simsmoins,
+                        model,
+                        config.model.ckpt_path,
+                        config.report.output_folder)
+    
+    # joint probabilities
+
+    PlotJointDistribution(Simsplus,
+                          Simsmoins,
+                          model,
+                          config.model.ckpt_path,
+                          config.report.output_folder,
+                          )
+
+
+
+
+
+
+
+    

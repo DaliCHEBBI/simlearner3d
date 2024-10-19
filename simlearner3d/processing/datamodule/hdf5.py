@@ -167,22 +167,4 @@ class HDF5StereoDataModule(LightningDataModule):
                           num_workers=1,
                           prefetch_factor=self.prefetch_factor,
                           )
-
-    """def _set_predict_data(self, las_file_to_predict):
-        self.predict_dataset = InferenceDataset(
-            las_file_to_predict,
-            self.epsg,
-            points_pre_transform=self.points_pre_transform,
-            pre_filter=self.pre_filter,
-            transform=self.predict_transform,
-            tile_width=self.tile_width,
-            subtile_overlap=self.subtile_overlap_predict,
-        )
-
-    def predict_dataloader(self):
-        return DataLoader(self.predict_dataset,
-                          batch_size=self.batch_size,
-                          num_workers=1,
-                          prefetch_factor=self.prefetch_factor,
-                          )"""
     
