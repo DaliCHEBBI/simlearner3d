@@ -23,6 +23,7 @@ from simlearner3d.models.modules.unet import UNet,UNetInference
 from simlearner3d.models.modules.unetgatedattention import UNetGatedAttention, UNetInferenceGatedAttention
 from simlearner3d.models.modules.decision_net import DecisionNetworkOnCube
 from simlearner3d.utils import utils
+from tqdm import tqdm
 
 log = utils.get_logger(__name__)
 
@@ -46,24 +47,19 @@ def PlotJointDistribution(Simsplus,
     Simsplus=np.expand_dims(Simsplus, axis=1)
     Simsmoins=np.expand_dims(Simsmoins, axis=1)
     Simall=np.concatenate((Simsplus,Simsmoins),axis=1)
-    Simall=Simall[0:100000000,:]
     print(Simall.shape)
     JDistrib=pd.DataFrame(Simall,columns=['+','-'])
     sns.color_palette("RdBu", 20)
     g = sns.jointplot(data = JDistrib,
                     x = "-",
                     y = "+",
-                    xlim=(0,1.0),
-                    ylim=(0.0,1.0),
+                    xlim=(-1.0,1.0) if model.mode == DEFAULT_MODE else (0.0,1.0),
+                    ylim=(-1.0,1.0) if model.mode == DEFAULT_MODE else (0.0,1.0),
                     cmap=cm.jet, 
                     kind="hist", 
                     marginal_kws={"color":"r", "alpha":.4, "bins":200, "stat":'percent'}, 
                     joint_kws={"bins":(200,200)},
                     stat='percent',
-                    #shade=True, 
-                    #thresh=0.05, 
-                    #alpha=.9,
-                    #fill=True,
                     marginal_ticks=True,
                     #n_levels=50,
                     cbar=True,
@@ -101,10 +97,11 @@ def PlotJointDistribution(Simsplus,
     for j in range(200):
         for i in range(j+1):
             if (values[j,i]!='--'):
+                print(values)
                 SUM_GOOD+=values[j,i]   
     pourcent=str("%.2f" % SUM_GOOD)+" %"       
 
-    _NAME_OUT=model.feature.__name__
+    _NAME_OUT=model.feature.__class__.__name__
     if model.mode!=DEFAULT_MODE:
         _NAME_OUT+="_MLP"
     NAME_EPOCH=os.path.basename(model_ckpt_path)[:-5]
@@ -308,11 +305,15 @@ def run_stats(net, test_loader, device,nans=0.0):
     net.eval()
     Simsplus=[]
     Simsmoins=[]
-    for _, batch in enumerate(test_loader, 0):
+    for _, batch in tqdm(enumerate(test_loader, 0),
+                         total= len(test_loader), 
+                         desc="Running qualification"):
         simP,simN=testing_step_dense(batch,
                                      net,
                                      device,
                                      nans)
+        print(" min max simP ", torch.min(simP), "  ", torch.max(simP))
+        print(" min max simN ", torch.min(simN), "  ", torch.max(simN))
         gc.collect()
         print("Sizes of matching similarity tile ",simP.shape)
         # compute loss
@@ -330,13 +331,11 @@ def _intersection_curve(Simsplus,
 
     Histplus,Histplusbins=np.histogram(Simsplus,
                                        bins=200,
-                                       density=True,
-                                       normed=True)
+                                       density=True)
 
     Histmoins,Histmoinsbins=np.histogram(Simsmoins,
                                          bins=200,
-                                         density=True,
-                                         normed=True)
+                                         density=True)
 
     plt.rcParams.update({'font.size': 10})
     plt.plot(Histplusbins[1:],
@@ -350,7 +349,7 @@ def _intersection_curve(Simsplus,
     PourcentageIntersection=ComputeAreabetweencurves(list(tuple(zip(Histplusbins, Histplus))),
                                                      list(tuple(zip(Histmoinsbins, Histmoins))))
     
-    ROCCurveAuc(Simsplus,Simsmoins)
+    #ROCCurveAuc(Simsplus,Simsmoins)
 
     plt.fill_between(Histplusbins[1:], Histplus, step="pre", alpha=0.2)
     plt.fill_between(Histmoinsbins[1:], Histmoins, step="pre", alpha=0.2)
@@ -376,7 +375,7 @@ def _intersection_curve(Simsplus,
     plt.xlabel("Similarity values")
     plt.ylabel("Count Number (%)")
 
-    _NAME_OUT=model.feature.__name__
+    _NAME_OUT=model.feature.__class__.__name__
     if model.mode!=DEFAULT_MODE:
         _NAME_OUT+="_MLP"
     NAME_EPOCH=os.path.basename(model_ckpt_path)[:-5]
@@ -416,7 +415,7 @@ def qualify(config: DictConfig):
     model = Model.load_from_checkpoint(config.model.ckpt_path, **kwargs_to_override)
 
     # Data loader for testing 
-    test_dataloader=datamodule.test_dataloader
+    test_dataloader=datamodule.test_dataloader()
     device=torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     Simsplus, Simsmoins=run_stats(model,test_dataloader,device,nans=0.0)
     Simsplus=np.concatenate(Simsplus, axis=0 )

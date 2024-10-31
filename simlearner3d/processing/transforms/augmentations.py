@@ -8,7 +8,7 @@ import torch
 
 log = utils.get_logger(__name__)
 
-
+import tifffile as tf
 
 class ClipAndComputeUsingPatchSize:
     def __init__(self,
@@ -41,7 +41,7 @@ class ClipAndComputeUsingPatchSize:
         print("moyenne disparite ", x_upl)
         tf.imwrite("./check_right.tif",
                    data._right[y_upl:y_upl+self.patch_size,:].detach().numpy())
-                   """
+        """           
         return Data(
             _left=data._left[y_upl:y_upl+self.patch_size,x_upl:x_upl+self.patch_size],
             _right=data._right[y_upl:y_upl+self.patch_size,:],

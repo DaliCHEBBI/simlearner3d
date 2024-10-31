@@ -54,8 +54,10 @@ def extract(config: DictConfig):
     model = Model.load_from_checkpoint(config.model.ckpt_path, **kwargs_to_override)
 
     neural_inference_network=get_inference_neural_net_class(model.feature)
+    print(neural_inference_network)
 
-    feature_inference=neural_inference_network(**kwargs_to_override("neural_net_hparams"))
+    print(kwargs_to_override.keys(),kwargs_to_override.values())
+    feature_inference=neural_inference_network(**kwargs_to_override["neural_net_hparams"])
 
     # copy parameters 
     feature_inference.load_state_dict(model.feature.state_dict())
@@ -63,8 +65,10 @@ def extract(config: DictConfig):
         assert(torch.equal(p1,p2))
     feature_inference_scrpt=torch.jit.script(feature_inference)
 
-    out_feature_inference=config.model.ckpt_path.replace('.ckpt','FEATURES.pt')
+    out_feature_inference=config.model.ckpt_path.replace('.ckpt','_FEATURES.pt')
     torch.jit.save(feature_inference_scrpt,out_feature_inference)
+
+    print("Model Feature is saved as : ", out_feature_inference)
 
     MODE=model.mode
     if MODE=="feature+decision":
@@ -77,9 +81,11 @@ def extract(config: DictConfig):
         
         decision_network_inference_scrpt=torch.jit.script(decision_network_inference)
         
-        out_decision_inference=config.model.ckpt_path.replace('.ckpt','DECISION_NET.pt')
+        out_decision_inference=config.model.ckpt_path.replace('.ckpt','_DECISION_NET.pt')
         
         torch.jit.save(decision_network_inference_scrpt,out_decision_inference)
+
+        print("Model Decision is saved as : ", out_decision_inference)
 
 
 

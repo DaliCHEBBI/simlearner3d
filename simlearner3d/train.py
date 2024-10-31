@@ -21,7 +21,7 @@ from pytorch_lightning import (
 )
 
 
-from pytorch_lightning.loggers import  Logger
+from pytorch_lightning.loggers import  LightningLoggerBase as Logger
 
 from simlearner3d.models.generic_model import Model
 from simlearner3d.utils import utils
