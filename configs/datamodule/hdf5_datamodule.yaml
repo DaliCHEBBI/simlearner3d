@@ -23,7 +23,7 @@ subtile_overlap_predict: 0
 
 batch_size: 16
 num_workers: 3
-prefetch_factor: 3
+prefetch_factor: 1
 
 defaults:
   - transforms: default.yaml

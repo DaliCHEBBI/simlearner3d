@@ -1,3 +1,8 @@
+ClipAndComputeUsingPatchSize:
+  _target_: simlearner3d.processing.transforms.augmentations.ClipAndComputeUsingPatchSize
+  tile_height: 1024
+  patch_size: 768   
+  
 VerticalFlip:
   _target_: simlearner3d.processing.transforms.augmentations.VerticalFlip
   p: 0.5

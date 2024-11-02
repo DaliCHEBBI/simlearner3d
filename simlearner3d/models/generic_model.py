@@ -34,13 +34,7 @@ def get_neural_net_class(class_name: str) -> nn.Module:
 DEFAULT_MODE="feature"
 
 class Model(LightningModule):
-    """Model training, validation, test and prediction of point cloud semantic segmentation.
-
-    During training and validation, metrics are calculed based on sumbsampled points only.
-    At test time, metrics are calculated considering all the points.
-
-    To keep this module light, a callback takes care of metric computations.
-
+    """Model training, validation, test.
 
     Read the Pytorch Lightning docs:
         https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html
@@ -88,19 +82,20 @@ class Model(LightningModule):
         #MaskDef=MaskDef.unsqueeze(1)  # ==> defined (occluded + non occluded + non available) disparity values 
         # MASK 0 ==> non available + non occluded areas ==> we search for occluded areas  
         #Mask0=Mask0.unsqueeze(1)
+        device='cuda' if x0.is_cuda else 'cpu'
         OCCLUDED=torch.logical_and(MaskDef,torch.logical_not(Mask0))
         #print('OCCLUDEDE SHAPE ',torch.max(OCCLUDED))
         # Forward
         FeatsL=self.feature(x0) 
         FeatsR=self.feature(x1)
-        Offset_neg=((self.false1 - self.false2) * torch.rand(dispnoc0.size()) + self.false2)
-        RandSens=torch.rand(dispnoc0.size())
+        Offset_neg=((self.false1 - self.false2) * torch.rand(dispnoc0.size(),device=device) + self.false2)
+        RandSens=torch.rand(dispnoc0.size(),device=device)
         RandSens=((RandSens < 0.5).float()+(RandSens >= 0.5).float()*(-1.0))
         Offset_neg=Offset_neg*RandSens
         #dispnoc0=torch.nan_to_num(dispnoc0, nan=0.0)
         D_pos=dispnoc0
         D_neg=dispnoc0+Offset_neg
-        Index_X=torch.arange(0,dispnoc0.size()[-1])
+        Index_X=torch.arange(0,dispnoc0.size()[-1],device=device)
         Index_X=Index_X.expand(dispnoc0.size()[-2],dispnoc0.size()[-1]).unsqueeze(0).unsqueeze(0).repeat_interleave(x0.size()[0],0)
         #print("INDEX SHAPE   ",Index_X.shape )
         # ADD OFFSET
@@ -134,7 +129,9 @@ class Model(LightningModule):
             ref_pos=self.decisionNet(torch.cat((FeatsL,FeatsR_plus),1))
             ref_neg=self.decisionNet(torch.cat((FeatsL,FeatsR_minus),1))
             sample = torch.cat((ref_pos, ref_neg), dim=0)
-            target = torch.cat((torch.ones(x0.size())-OCCLUDED.float(), torch.zeros(x0.size())), dim=0)
+            target = torch.cat((torch.ones(x0.size(),device=device)-OCCLUDED.float(),
+                                 torch.zeros(x0.size(),device=device)), 
+                                 dim=0)
             training_loss=self.criterion(sample+1e-20, target)*torch.cat((MaskGlobP,MaskGlobN),0)
 
         training_loss=training_loss.sum().div(MaskGlobP.count_nonzero()+MaskGlobN.count_nonzero()+1e-12)
@@ -159,16 +156,17 @@ class Model(LightningModule):
         OCCLUDED=torch.logical_and(MaskDef,torch.logical_not(Mask0))
         #print('OCCLUDEDE SHAPE ',OCCLUDED.shape)
         # Forward
+        device='cuda' if x0.is_cuda else 'cpu'
         FeatsL=self.feature(x0) 
         FeatsR=self.feature(x1)
-        Offset_neg=((self.false1 - self.false2) * torch.rand(dispnoc0.size()) + self.false2)
-        RandSens=torch.rand(dispnoc0.size())
+        Offset_neg=((self.false1 - self.false2) * torch.rand(dispnoc0.size(),device=device) + self.false2)
+        RandSens=torch.rand(dispnoc0.size(),device=device)
         RandSens=((RandSens < 0.5).float()+(RandSens >= 0.5).float()*(-1.0))
         Offset_neg=Offset_neg*RandSens
         #dispnoc0=torch.nan_to_num(dispnoc0, nan=0.0)
         D_pos=dispnoc0
         D_neg=dispnoc0+Offset_neg
-        Index_X=torch.arange(0,dispnoc0.size()[-1])
+        Index_X=torch.arange(0,dispnoc0.size()[-1],device=device)
         Index_X=Index_X.expand(dispnoc0.size()[-2],dispnoc0.size()[-1]).unsqueeze(0).unsqueeze(0).repeat_interleave(x0.size()[0],0)
         #print("INDEX SHAPE   ",Index_X.shape )
         # ADD OFFSET
@@ -201,7 +199,9 @@ class Model(LightningModule):
             ref_pos=self.decisionNet(torch.cat((FeatsL,FeatsR_plus),1))
             ref_neg=self.decisionNet(torch.cat((FeatsL,FeatsR_minus),1))
             sample = torch.cat((ref_pos, ref_neg), dim=0)
-            target = torch.cat((torch.ones(x0.size())-OCCLUDED.float(), torch.zeros(x0.size())), dim=0)
+            target = torch.cat((torch.ones(x0.size(),device=device)-OCCLUDED.float(), 
+                                torch.zeros(x0.size(),device=device)), 
+                                dim=0)
             validation_loss=self.criterion(sample+1e-20, target)*torch.cat((MaskGlobP,MaskGlobN),0)
 
         validation_loss=validation_loss.sum().div(MaskGlobP.count_nonzero()
@@ -227,16 +227,17 @@ class Model(LightningModule):
         OCCLUDED=torch.logical_and(MaskDef,torch.logical_not(Mask0))
         #print('OCCLUDEDE SHAPE ',OCCLUDED.shape)
         # Forward
+        device='cuda' if x0.is_cuda else 'cpu'
         FeatsL=self.feature(x0) 
         FeatsR=self.feature(x1)
-        Offset_neg=((self.false1 - self.false2) * torch.rand(dispnoc0.size()) + self.false2)
-        RandSens=torch.rand(dispnoc0.size())
+        Offset_neg=((self.false1 - self.false2) * torch.rand(dispnoc0.size(),device=device) + self.false2)
+        RandSens=torch.rand(dispnoc0.size(),device=device)
         RandSens=((RandSens < 0.5).float()+(RandSens >= 0.5).float()*(-1.0))
         Offset_neg=Offset_neg*RandSens
         #dispnoc0=torch.nan_to_num(dispnoc0, nan=0.0)
         D_pos=dispnoc0
         D_neg=dispnoc0+Offset_neg
-        Index_X=torch.arange(0,dispnoc0.size()[-1])
+        Index_X=torch.arange(0,dispnoc0.size()[-1],device=device)
         Index_X=Index_X.expand(dispnoc0.size()[-2],dispnoc0.size()[-1]).unsqueeze(0).unsqueeze(0).repeat_interleave(x0.size()[0],0)
         #print("INDEX SHAPE   ",Index_X.shape )
         # ADD OFFSET
@@ -269,7 +270,9 @@ class Model(LightningModule):
             ref_pos=self.decisionNet(torch.cat((FeatsL,FeatsR_plus),1))
             ref_neg=self.decisionNet(torch.cat((FeatsL,FeatsR_minus),1))
             sample = torch.cat((ref_pos, ref_neg), dim=0)
-            target = torch.cat((torch.ones(x0.size())-OCCLUDED.float(), torch.zeros(x0.size())), dim=0)
+            target = torch.cat((torch.ones(x0.size(),device=device)-OCCLUDED.float(),
+                                torch.zeros(x0.size(),device=device)),
+                                dim=0)
             test_loss=self.criterion(sample+1e-20, target)*torch.cat((MaskGlobP,MaskGlobN),0)
 
         test_loss=test_loss.sum().div(MaskGlobP.count_nonzero()

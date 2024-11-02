@@ -120,8 +120,9 @@ class HDF5Dataset(Dataset):
         """
         if self.dataset is None:
             self.dataset = h5py.File(self.hdf5_file_path, "r")
+        split,basename=osp.dirname(sample_hdf5_path),osp.basename(sample_hdf5_path)
 
-        grp = self.dataset[sample_hdf5_path]
+        grp = self.dataset[split][basename]#[sample_hdf5_path]
 
         return Data(
             _left=torch.from_numpy(grp["l"][...]),
@@ -238,28 +239,30 @@ def create_hdf5(
                 data = images_pre_transform(image_gt_masq_set)
                 print(data._left.shape)
 
-                hdf5_path = os.path.join(split, basename_left)
+                
+                if basename_left not in hdf5_file[split]:
+                     hdf5_file[split].create_group(basename_left)
 
-                hdf5_file.create_dataset(
-                    os.path.join(hdf5_path, "l"),
+                hdf5_file[split][basename_left].create_dataset(
+                    "l",
                     data._left.shape,
                     dtype="f",
                     data=data._left,
                 )
-                hdf5_file.create_dataset(
-                    os.path.join(hdf5_path, "r"),
+                hdf5_file[split][basename_left].create_dataset(
+                    "r",
                     data._right.shape,
                     dtype="f",
                     data=data._right,
                 )
-                hdf5_file.create_dataset(
-                    os.path.join(hdf5_path, "d"),
+                hdf5_file[split][basename_left].create_dataset(
+                    "d",
                     data._disp.shape,
                     dtype="f",
                     data=data._disp,
                 )
-                hdf5_file.create_dataset(
-                    os.path.join(hdf5_path, "m"),
+                hdf5_file[split][basename_left].create_dataset(
+                    "m",
                     data._masq.shape,
                     dtype="f",
                     data=data._masq,

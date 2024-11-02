@@ -392,8 +392,7 @@ def qualify(config: DictConfig):
     
     """
     Computes :
-      - joint probability distributions of matching and non matching pixels after training
-      - ROC curves 
+      - joint probability distributions of matching and non matching pixels after training 
 
     """
     # Set seed for random number generators in pytorch, numpy and python.random
