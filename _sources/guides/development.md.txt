@@ -13,6 +13,7 @@ Tests can be run in an activated environment with.
 ```bash
 conda activate simlearner3d
 python -m pytest -rA -v
+
 ```
 
 ## Continuous Integration (CI)
