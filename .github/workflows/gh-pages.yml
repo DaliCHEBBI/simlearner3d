@@ -60,6 +60,9 @@ jobs:
           export LD_LIBRARY_PATH="/usr/share/miniconda3/envs/simlearner3d/lib:$LD_LIBRARY_PATH"
           make html
 
+      - name: Configure Pages
+        uses: actions/configure-pages@v4
+      
       # 3. Déploy on Github Pages
       - name: "Deploy documentation on Github pages"
         uses: JamesIves/github-pages-deploy-action@v4
