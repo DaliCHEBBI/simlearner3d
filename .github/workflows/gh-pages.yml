@@ -62,8 +62,8 @@ jobs:
 
       # 3. Déploy on Github Pages
       - name: "Deploy documentation on Github pages"
-        #uses: JamesIves/github-pages-deploy-action@v4
-        uses: actions/upload-pages-artifact@v3
+        uses: JamesIves/github-pages-deploy-action@v5
+        #uses: actions/upload-pages-artifact@v3
         with:
           BRANCH: gh-pages     # <- Branch where generated doc files will be commited
           # BRANCH: gh-pages-DEBUG    # <-- UNCOMMENT TO DEBUG DOCUMENTATION
