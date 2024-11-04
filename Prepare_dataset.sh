@@ -1,5 +1,5 @@
 
-DATASET_DIR="/media/mohamedali/Thales/DUBLIN_DENSE_TRAINING_1/"
+DATASET_DIR="/media/mohamedali/DUBLIN_DENSE_TRAINING_1/"
 
 python simlearner3d/processing/dataset/toy_dataset.py +task.task_name="prepare_dataset" \
 prepare_dataset.left="${DATASET_DIR}l_1_left_train.txt" \
