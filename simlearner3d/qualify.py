@@ -242,13 +242,19 @@ def testing_step_dense(batch,
                        false2=40
                        ):
         
-    x0,x1,dispnoc0,Mask0,x_offset=batch.to(device)
-
+    x0,x1,dispnoc0,Mask0,x_offset=batch
+    
+    dispnoc0=dispnoc0.to(device)
+    Mask0=Mask0.to(device)
+    x_offset=x_offset.to(device)
+    
     MaskDef=(dispnoc0!=nans)
     
     FeatsL=modulems.feature(x0.to(device)) 
     
     FeatsR=modulems.feature(x1.to(device))
+    
+
     
     Offset_neg=((false1 - false2) * torch.rand(dispnoc0.size(),device=device) + false2)
     
