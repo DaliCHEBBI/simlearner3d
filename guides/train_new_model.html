@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>How to train new models &mdash; simlearner3d 3.8.4 documentation</title>
+  <title>How to train new models &mdash; simlearner3d 1.0.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/sphinx_paramlinks.css" type="text/css" />
@@ -176,15 +176,15 @@ Refer to <a class="reference internal" href="../tutorials/prepare_dataset.html">
 <h2>Quick run<a class="headerlink" href="#quick-run" title="Permalink to this headline"></a></h2>
 <p>To test your setup and logging capabilities, you can try overfitting on a single batch of data from the toy dataset, created following instructions in <a class="reference internal" href="../tutorials/prepare_dataset.html"><span class="doc std std-doc">this page</span></a>).
 To overfit on a single batch for 30 epochs, run:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>run.py<span class="w"> </span><span class="nv">experiment</span><span class="o">=</span>MSAFFDebug
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>run.py<span class="w"> </span><span class="nv">experiment</span><span class="o">=</span>SIMDebug
 </pre></div>
 </div>
 </section>
 <section id="training">
 <h2>Training<a class="headerlink" href="#training" title="Permalink to this headline"></a></h2>
-<p>Define your experiment hyperparameters in an experiment file in the <code class="docutils literal notranslate"><span class="pre">configs/experiment</span></code> folder. You may stem from one of the provided experiment file (e.g. <code class="docutils literal notranslate"><span class="pre">MSAFF_base_run_FR.yaml</span></code>).</p>
+<p>Define your experiment hyperparameters in an experiment file in the <code class="docutils literal notranslate"><span class="pre">configs/experiment</span></code> folder. You may stem from one of the provided experiment file (e.g. <code class="docutils literal notranslate"><span class="pre">SIM_base_run_FR.yaml</span></code>).</p>
 <p>To run a typically nominal training,validation and testing, run:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>run.py<span class="w"> </span><span class="nv">experiment</span><span class="o">=</span>MSAFF_base_run_FR
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>run.py<span class="w"> </span><span class="nv">experiment</span><span class="o">=</span>SIM_base_run_FR
 </pre></div>
 </div>
 <p>After training, you model best checkpoints and hydra config will be saved in a <code class="docutils literal notranslate"><span class="pre">DATE/TIME/</span></code> subfolder of the <code class="docutils literal notranslate"><span class="pre">LOGS_DIR</span></code> you specified, with an associated hydra <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code>.</p>
@@ -195,7 +195,7 @@ You can perfom this automatically before training by setting <code class="docuti
 </section>
 <section id="multi-gpus">
 <h3>Multi-GPUs<a class="headerlink" href="#multi-gpus" title="Permalink to this headline"></a></h3>
-<p>Multi-GPUs training is supported. Refer to e.g. experiment file <code class="docutils literal notranslate"><span class="pre">MSAFF_base_run_FR-MultiGPU.yaml</span></code> for pytorch lightning flags to activate it.
+<p>Multi-GPUs training is supported. Refer to e.g. experiment file <code class="docutils literal notranslate"><span class="pre">SIM_base_run_FR-MultiGPU.yaml</span></code> for pytorch lightning flags to activate it.
 Multi-GPUs training effectively reduces training time by the number of GPUs used. Batch size might need to be reduced to keep a constant number of steps per epoch in DDP.</p>
 </section>
 </section>
