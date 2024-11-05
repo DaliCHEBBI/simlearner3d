@@ -242,7 +242,7 @@ def testing_step_dense(batch,
                        false2=40
                        ):
         
-    x0,x1,dispnoc0,Mask0,x_offset=batch
+    x0,x1,dispnoc0,Mask0,x_offset=batch.to(device)
 
     MaskDef=(dispnoc0!=nans)
     
