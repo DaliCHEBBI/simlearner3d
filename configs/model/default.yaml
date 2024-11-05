@@ -21,7 +21,6 @@ monitor: "val_loss"
 false1: 1
 false2: 4
 learning_rate: 0.001
-mode: "feature" # takes "feature" or "feature+decision"
 
 
 defaults:

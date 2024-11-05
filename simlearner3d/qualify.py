@@ -104,6 +104,7 @@ def PlotJointDistribution(Simsplus,
     _NAME_OUT=model.feature.__class__.__name__
     if model.mode!=DEFAULT_MODE:
         _NAME_OUT+="_MLP"
+    _NAME_OUT+="_false1={}_false2={}_".format(model.false1,model.false2)
     NAME_EPOCH=os.path.basename(model_ckpt_path)[:-5]
     handles = [mpatches.Patch(facecolor=plt.cm.jet(255), label='{} : {}'.format(_NAME_OUT,pourcent))]
     g.ax_joint.legend(handles=handles,loc=4)
@@ -311,7 +312,9 @@ def run_stats(net, test_loader, device,nans=0.0):
         simP,simN=testing_step_dense(batch,
                                      net,
                                      device,
-                                     nans)
+                                     nans,
+                                     false1=net.false1,
+                                     false2=net.false2)
         print(" min max simP ", torch.min(simP), "  ", torch.max(simP))
         print(" min max simN ", torch.min(simN), "  ", torch.max(simN))
         gc.collect()
@@ -379,7 +382,7 @@ def _intersection_curve(Simsplus,
     if model.mode!=DEFAULT_MODE:
         _NAME_OUT+="_MLP"
     NAME_EPOCH=os.path.basename(model_ckpt_path)[:-5]
-    plt.title(_NAME_OUT+"_{:.2f}%".format(PourcentageIntersection*100))
+    plt.title(_NAME_OUT+"_{:.2f}_false1={}_false2={}%".format(PourcentageIntersection*100,model.false1,model.false2))
     #legend_properties = {'weight':'bold'}
     plt.legend(fontsize=10)
     plt.savefig("{}/{}_{}_Surf_{:.2f}%".format(output_folder,
@@ -425,7 +428,8 @@ def qualify(config: DictConfig):
                         Simsmoins,
                         model,
                         config.model.ckpt_path,
-                        config.report.output_folder)
+                        config.report.output_folder
+                        )
     
     # joint probabilities
 
@@ -435,11 +439,3 @@ def qualify(config: DictConfig):
                           config.model.ckpt_path,
                           config.report.output_folder,
                           )
-
-
-
-
-
-
-
-    

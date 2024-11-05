@@ -35,7 +35,7 @@ defaults:
   - task: default.yaml
   #- predict: default.yaml
 
-  - experiment: MSAFFDebug.yaml  # default run is for debugging.
+  - experiment: SIMDebug.yaml  # default run is for debugging.
 
   - hydra: default.yaml
 
