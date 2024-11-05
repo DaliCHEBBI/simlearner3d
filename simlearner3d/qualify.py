@@ -250,9 +250,9 @@ def testing_step_dense(batch,
     
     FeatsR=modulems.feature(x1.to(device))
     
-    Offset_neg=((false1 - false2) * torch.rand(dispnoc0.size()) + false2)
+    Offset_neg=((false1 - false2) * torch.rand(dispnoc0.size(),device=device) + false2)
     
-    RandSens=torch.rand(dispnoc0.size())
+    RandSens=torch.rand(dispnoc0.size(),device=device)
     
     RandSens=((RandSens < 0.5).float()+(RandSens >= 0.5).float()*(-1.0))
     
@@ -262,7 +262,7 @@ def testing_step_dense(batch,
     D_pos=dispnoc0
     D_neg=dispnoc0+Offset_neg
     
-    Index_X=torch.arange(0,dispnoc0.size()[-1])
+    Index_X=torch.arange(0,dispnoc0.size()[-1],device=device)
     Index_X=Index_X.expand(dispnoc0.size()[-2],dispnoc0.size()[-1]).unsqueeze(0).unsqueeze(0).repeat_interleave(x0.size()[0],0)
 
     Index_X=Index_X.add(x_offset.unsqueeze(0).T.unsqueeze(2).unsqueeze(3))
@@ -419,6 +419,7 @@ def qualify(config: DictConfig):
     # Data loader for testing 
     test_dataloader=datamodule.test_dataloader()
     device=torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+    model=model.to(device)
     Simsplus, Simsmoins=run_stats(model,test_dataloader,device,nans=0.0)
     Simsplus=np.concatenate(Simsplus, axis=0 )
     Simsmoins=np.concatenate(Simsmoins, axis=0 )
