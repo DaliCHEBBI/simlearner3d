@@ -31,7 +31,8 @@ To perform hierarchical matching using our similarity learning models, you need 
 * git clone our repository and install `micmac` and `MicMac V2` after downloading plateform specific [torch cpp libraries](). You may need to modifiy `TORCH_INSTALL_PREFIX` in CMakeLists.txt to point to  `libtorch` folder. For our installation, we set it to `${MMVII_SOURCE_DIR}/libtorch`
 * compile MMVII and micmac with libtorch 
 * MicMac uses `xml specifications` files for hierachical dense image matching, we provide an example xml configuration file:
-`
+
+```
 <ParamMICMAC>
 
 <DicoLoc>
@@ -265,10 +266,12 @@ To perform hierarchical matching using our similarity learning models, you need 
 </Section_Vrac>
 
 </ParamMICMAC>
-`
+```
 * The aformentionned xml file activates our models from `Zoom 4`, i.e models are in charge of reconstruction for zooms: 4,2,1.
 This is accomplished with and adhoc correlation that calls a set of .pt models (feature extraction + mlp).
-`
+
+
+```
             <CorrelAdHoc>
                 <SzBlocAH> 40000000 </SzBlocAH>
                 <TypeCAH>
@@ -281,7 +284,9 @@ This is accomplished with and adhoc correlation that calls a set of .pt models (
                     </ScoreLearnedMMVII>
                 </TypeCAH>
             </CorrelAdHoc>
-`
+
+```
+
 * Parametrization: To launch stereo matching between a pair of epipolar images,
 
 `mm3d MICMAC File.xml +Im1=Im1.tif +Im2=Im2.tif  +DirMEC=MEC/ +OnCuda=0 +UsePredicNet=1`

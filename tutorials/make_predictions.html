@@ -186,245 +186,265 @@ model.ckpt_path<span class="o">={</span>/path/to/checkpoint.ckpt<span class="o">
 <ul class="simple">
 <li><p>git clone our repository and install <code class="docutils literal notranslate"><span class="pre">micmac</span></code> and <code class="docutils literal notranslate"><span class="pre">MicMac</span> <span class="pre">V2</span></code> after downloading plateform specific <span class="xref myst">torch cpp libraries</span>. You may need to modifiy <code class="docutils literal notranslate"><span class="pre">TORCH_INSTALL_PREFIX</span></code> in CMakeLists.txt to point to  <code class="docutils literal notranslate"><span class="pre">libtorch</span></code> folder. For our installation, we set it to <code class="docutils literal notranslate"><span class="pre">${MMVII_SOURCE_DIR}/libtorch</span></code></p></li>
 <li><p>compile MMVII and micmac with libtorch</p></li>
-<li><p>MicMac uses <code class="docutils literal notranslate"><span class="pre">xml</span> <span class="pre">specifications</span></code> files for hierachical dense image matching, we provide an example xml configuration file:
-`
-<ParamMICMAC></p></li>
+<li><p>MicMac uses <code class="docutils literal notranslate"><span class="pre">xml</span> <span class="pre">specifications</span></code> files for hierachical dense image matching, we provide an example xml configuration file:</p></li>
 </ul>
-<DicoLoc>
-       <Symb> ZReg=0.005  </Symb>
-       <Symb> DefCor=0.4  </Symb>
-       <Symb> CostTrans=1.0 </Symb>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>   &lt;Symb&gt; SzW=3 &lt;/Symb&gt;
-   &lt;Symb&gt; PenteMax=3.0 &lt;/Symb&gt;
-   &lt;Symb&gt; Interpol=eInterpolBiLin  &lt;/Symb&gt;
-   &lt;Symb&gt; DoEpi=true &lt;/Symb&gt;
-   &lt;Symb&gt; Ori=Epi    &lt;/Symb&gt;
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>&lt;ParamMICMAC&gt;
 
-   &lt;Symb&gt; Im=TEST   &lt;/Symb&gt;
+&lt;DicoLoc&gt;
+       &lt;Symb&gt; ZReg=0.005  &lt;/Symb&gt;
+       &lt;Symb&gt; DefCor=0.4  &lt;/Symb&gt;
+       &lt;Symb&gt; CostTrans=1.0 &lt;/Symb&gt;
 
-   &lt;Symb&gt; Im1=Im1DUBL.tif &lt;/Symb&gt;
-   &lt;Symb&gt; Im2=Im2DUBL.tif &lt;/Symb&gt;
+       &lt;Symb&gt; SzW=3 &lt;/Symb&gt;
+       &lt;Symb&gt; PenteMax=3.0 &lt;/Symb&gt;
+       &lt;Symb&gt; Interpol=eInterpolBiLin  &lt;/Symb&gt;
+       &lt;Symb&gt; DoEpi=true &lt;/Symb&gt;
+       &lt;Symb&gt; Ori=Epi    &lt;/Symb&gt;
 
-   &lt;Symb&gt; Modele=XXX&lt;/Symb&gt;
-   &lt;Symb&gt; WITH_MODELE=true &lt;/Symb&gt;
-   &lt;Symb&gt; IncPix=100  &lt;/Symb&gt;
-   &lt;Symb&gt; NbDirProg=7   &lt;/Symb&gt;
-   &lt;Symb&gt; ExtImIn=tif   &lt;/Symb&gt;
-   &lt;Symb&gt; Purge=true   &lt;/Symb&gt;
-   &lt;Symb&gt; NbProc=4   &lt;/Symb&gt;
-   &lt;Symb&gt; OnCuda=false&lt;/Symb&gt;
-   &lt;Symb&gt; UseMLP=false&lt;/Symb&gt;
-</pre></div>
-</div>
-  <!-- Parametres calcule -->
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>    &lt;Symb&gt;  DirMEC=${Modele} &lt;/Symb&gt;
-    &lt;Symb&gt;  DirPyram=Pyram/ &lt;/Symb&gt;
-</pre></div>
-</div>
-</DicoLoc>
-<p>&lt;Section_Terrain&gt;
-<IntervParalaxe>
-<Px1IncCalc> ${IncPix} </Px1IncCalc>
-</IntervParalaxe></p>
-<p>&lt;/Section_Terrain&gt;</p>
-<p>&lt;Section_PriseDeVue&gt;</p>
-<p><GeomImages> eGeomImage_EpipolairePure </GeomImages></p>
-   <Images>
-    	<Im1>   ${Im1} </Im1>
-    	<Im2>   ${Im2}    </Im2>
-   </Images>
-   <MasqImageIn>
-             <OneMasqueImage>
-                <PatternSel>  (.*)\.${ExtImIn}  </PatternSel>
-                <NomMasq>  $1_Masq.tif     </NomMasq>
-             </OneMasqueImage>
-             <AcceptNonExistingFile> true </AcceptNonExistingFile>
-   </MasqImageIn>
-<p>&lt;/Section_PriseDeVue&gt;</p>
-<!--  *************************************************************
+       &lt;Symb&gt; Im=TEST   &lt;/Symb&gt;
+
+       &lt;Symb&gt; Im1=Im1DUBL.tif &lt;/Symb&gt;
+       &lt;Symb&gt; Im2=Im2DUBL.tif &lt;/Symb&gt;
+
+       &lt;Symb&gt; Modele=XXX&lt;/Symb&gt;
+       &lt;Symb&gt; WITH_MODELE=true &lt;/Symb&gt;
+       &lt;Symb&gt; IncPix=100  &lt;/Symb&gt;
+       &lt;Symb&gt; NbDirProg=7   &lt;/Symb&gt;
+       &lt;Symb&gt; ExtImIn=tif   &lt;/Symb&gt;
+       &lt;Symb&gt; Purge=true   &lt;/Symb&gt;
+       &lt;Symb&gt; NbProc=4   &lt;/Symb&gt;
+       &lt;Symb&gt; OnCuda=false&lt;/Symb&gt;
+       &lt;Symb&gt; UseMLP=false&lt;/Symb&gt;
+  &lt;!-- Parametres calcule --&gt;
+        
+        &lt;Symb&gt;  DirMEC=${Modele} &lt;/Symb&gt;
+        &lt;Symb&gt;  DirPyram=Pyram/ &lt;/Symb&gt;
+
+&lt;/DicoLoc&gt;
+
+&lt;Section_Terrain&gt; 
+      &lt;IntervParalaxe&gt;
+            &lt;Px1IncCalc&gt; ${IncPix} &lt;/Px1IncCalc&gt;
+      &lt;/IntervParalaxe&gt;
+      
+&lt;/Section_Terrain&gt;
+
+&lt;Section_PriseDeVue&gt;
+
+   &lt;GeomImages&gt; eGeomImage_EpipolairePure &lt;/GeomImages&gt; 
+
+   &lt;Images&gt;
+    	&lt;Im1&gt;   ${Im1} &lt;/Im1&gt;
+    	&lt;Im2&gt;   ${Im2}    &lt;/Im2&gt;
+   &lt;/Images&gt;
+
+   &lt;MasqImageIn&gt;
+             &lt;OneMasqueImage&gt;
+                &lt;PatternSel&gt;  (.*)\.${ExtImIn}  &lt;/PatternSel&gt;
+                &lt;NomMasq&gt;  $1_Masq.tif     &lt;/NomMasq&gt;
+             &lt;/OneMasqueImage&gt;
+             &lt;AcceptNonExistingFile&gt; true &lt;/AcceptNonExistingFile&gt;
+   &lt;/MasqImageIn&gt;
+
+&lt;/Section_PriseDeVue&gt;
+
+
+&lt;!--  *************************************************************
        Parametres fixant le comportement
-     de l'algo de mise en correspondance
--->
-<p>&lt;Section_MEC&gt;
-<ChantierFullImage1> true </ChantierFullImage1></p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>&lt;EtapeMEC&gt;
-	    &lt;DeZoom&gt; -1 &lt;/DeZoom&gt;
-	    &lt;ModeInterpolation&gt; ${Interpol} &lt;/ModeInterpolation&gt;
-	
-    &lt;!-- param correl --&gt;
-    &lt;SzW&gt; ${SzW} &lt;/SzW&gt;
+     de l&#39;algo de mise en correspondance
+--&gt;
+&lt;Section_MEC&gt;
+	&lt;ChantierFullImage1&gt; true &lt;/ChantierFullImage1&gt;
 
-        &lt;AlgoRegul&gt; eAlgo2PrgDyn &lt;/AlgoRegul&gt;
+	&lt;EtapeMEC&gt;
+    	    &lt;DeZoom&gt; -1 &lt;/DeZoom&gt;
+    	    &lt;ModeInterpolation&gt; ${Interpol} &lt;/ModeInterpolation&gt;
+		
+	    &lt;!-- param correl --&gt;
+	    &lt;SzW&gt; ${SzW} &lt;/SzW&gt;
 
-    &lt;Px1Pas&gt;        1  &lt;/Px1Pas&gt;
-        &lt;Px1DilatAlti&gt;  7  &lt;/Px1DilatAlti&gt;
-    &lt;Px1DilatPlani&gt; 3  &lt;/Px1DilatPlani&gt;
-    &lt;Px1Regul&gt; ${ZReg} &lt;/Px1Regul&gt;
+            &lt;AlgoRegul&gt; eAlgo2PrgDyn &lt;/AlgoRegul&gt;
 
-        &lt;GenImagesCorrel&gt; true &lt;/GenImagesCorrel&gt;
+	    &lt;Px1Pas&gt;        1  &lt;/Px1Pas&gt;
+            &lt;Px1DilatAlti&gt;  7  &lt;/Px1DilatAlti&gt;
+	    &lt;Px1DilatPlani&gt; 3  &lt;/Px1DilatPlani&gt;
+	    &lt;Px1Regul&gt; ${ZReg} &lt;/Px1Regul&gt;
+
+            &lt;GenImagesCorrel&gt; true &lt;/GenImagesCorrel&gt;
+	    
+            &lt;SsResolOptim&gt; 1 &lt;/SsResolOptim&gt;
+            &lt;CoxRoyUChar&gt; false &lt;/CoxRoyUChar&gt;
+
+
+	    &lt;ModulationProgDyn&gt;
+               &lt;EtapeProgDyn&gt;
+            	   &lt;ModeAgreg&gt; ePrgDAgrSomme &lt;/ModeAgreg&gt;
+                   &lt;NbDir&gt; ${NbDirProg} &lt;/NbDir&gt;
+               &lt;/EtapeProgDyn&gt;
+               &lt;Px1PenteMax&gt; ${PenteMax} &lt;/Px1PenteMax&gt;
+               &lt;ArgMaskAuto&gt;
+            	   &lt;ValDefCorrel&gt; ${DefCor} &lt;/ValDefCorrel&gt;
+		   &lt;CostTrans&gt; ${CostTrans} &lt;/CostTrans&gt;
+                   &lt;ReInjectMask&gt; false &lt;/ReInjectMask&gt; 
+               &lt;/ArgMaskAuto&gt;
+            &lt;/ModulationProgDyn&gt;
+
+
+    &lt;/EtapeMEC&gt;
+
+	&lt;!--  &lt;EtapeMEC&gt; &lt;DeZoom&gt; 16 &lt;/DeZoom&gt; &lt;/EtapeMEC&gt;	 --&gt;
+    &lt;!-- &lt;EtapeMEC&gt; &lt;DeZoom&gt; 64 &lt;/DeZoom&gt; &lt;/EtapeMEC&gt; 
+    &lt;EtapeMEC&gt; &lt;DeZoom&gt; 32 &lt;/DeZoom&gt; &lt;/EtapeMEC&gt;      --&gt;
+    &lt;EtapeMEC&gt; &lt;DeZoom&gt; 16 &lt;/DeZoom&gt; &lt;/EtapeMEC&gt;
     
-        &lt;SsResolOptim&gt; 1 &lt;/SsResolOptim&gt;
-        &lt;CoxRoyUChar&gt; false &lt;/CoxRoyUChar&gt;
-
-
-    &lt;ModulationProgDyn&gt;
-           &lt;EtapeProgDyn&gt;
-        	   &lt;ModeAgreg&gt; ePrgDAgrSomme &lt;/ModeAgreg&gt;
-               &lt;NbDir&gt; ${NbDirProg} &lt;/NbDir&gt;
-           &lt;/EtapeProgDyn&gt;
-           &lt;Px1PenteMax&gt; ${PenteMax} &lt;/Px1PenteMax&gt;
-           &lt;ArgMaskAuto&gt;
-        	   &lt;ValDefCorrel&gt; ${DefCor} &lt;/ValDefCorrel&gt;
-	   &lt;CostTrans&gt; ${CostTrans} &lt;/CostTrans&gt;
-               &lt;ReInjectMask&gt; false &lt;/ReInjectMask&gt; 
-           &lt;/ArgMaskAuto&gt;
-        &lt;/ModulationProgDyn&gt;
-
-
-&lt;/EtapeMEC&gt;
-
-&lt;!--  &lt;EtapeMEC&gt; &lt;DeZoom&gt; 16 &lt;/DeZoom&gt; &lt;/EtapeMEC&gt;	 --&gt;
-&lt;!-- &lt;EtapeMEC&gt; &lt;DeZoom&gt; 64 &lt;/DeZoom&gt; &lt;/EtapeMEC&gt; 
-&lt;EtapeMEC&gt; &lt;DeZoom&gt; 32 &lt;/DeZoom&gt; &lt;/EtapeMEC&gt;      --&gt;
-&lt;EtapeMEC&gt; &lt;DeZoom&gt; 16 &lt;/DeZoom&gt; &lt;/EtapeMEC&gt;
-
-
-&lt;EtapeMEC&gt; &lt;DeZoom&gt; 8  &lt;/DeZoom&gt; 
-        &lt;CorrelAdHoc&gt;
-            &lt;SzBlocAH&gt; 40000000 &lt;/SzBlocAH&gt;
-            &lt;TypeCAH&gt;
-                &lt;ScoreLearnedMMVII &gt;
-                    &lt;FileModeleCost&gt; MVCNNCorrel&lt;/FileModeleCost&gt;
-                    &lt;FileModeleParams&gt;../MODEL_MSAFF_AERIAL_DECISION/.*.pt&lt;/FileModeleParams&gt;
-                    &lt;FileModeleArch&gt;UnetMLPMatcher&lt;/FileModeleArch&gt;
-                    &lt;Cuda&gt; ${OnCuda} &lt;/Cuda&gt;
-		&lt;UsePredicNet&gt; ${UseMLP} &lt;/UsePredicNet&gt;
-                &lt;/ScoreLearnedMMVII&gt;
-            &lt;/TypeCAH&gt;
-        &lt;/CorrelAdHoc&gt;
-   &lt;/EtapeMEC&gt;
-
-&lt;EtapeMEC&gt; &lt;DeZoom&gt; 4  &lt;/DeZoom&gt; 
-        &lt;CorrelAdHoc&gt;
-            &lt;SzBlocAH&gt; 40000000 &lt;/SzBlocAH&gt;
-            &lt;TypeCAH&gt;
-                &lt;ScoreLearnedMMVII &gt;
-                    &lt;FileModeleCost&gt; MVCNNCorrel&lt;/FileModeleCost&gt;
-                    &lt;FileModeleParams&gt;../MODEL_MSAFF_AERIAL_DECISION/.*.pt&lt;/FileModeleParams&gt;
-                    &lt;FileModeleArch&gt;UnetMLPMatcher&lt;/FileModeleArch&gt;
-                    &lt;Cuda&gt; ${OnCuda} &lt;/Cuda&gt;
-		&lt;UsePredicNet&gt; ${UseMLP} &lt;/UsePredicNet&gt;
-                &lt;/ScoreLearnedMMVII&gt;
-            &lt;/TypeCAH&gt;
-        &lt;/CorrelAdHoc&gt;
-   &lt;/EtapeMEC&gt;
-&lt;EtapeMEC&gt; 
-    &lt;DeZoom&gt; 2  &lt;/DeZoom&gt; 
-        &lt;CorrelAdHoc&gt;
-            &lt;SzBlocAH&gt; 40000000 &lt;/SzBlocAH&gt;
-            &lt;TypeCAH&gt;
-                &lt;ScoreLearnedMMVII &gt;
-                    &lt;FileModeleCost&gt; MVCNNCorrel&lt;/FileModeleCost&gt;
-                    &lt;FileModeleParams&gt;../MODEL_MSAFF_AERIAL_DECISION/.*.pt&lt;/FileModeleParams&gt;
-                    &lt;FileModeleArch&gt;UnetMLPMatcher&lt;/FileModeleArch&gt;
-                    &lt;Cuda&gt; ${OnCuda} &lt;/Cuda&gt;
-		&lt;UsePredicNet&gt; ${UseMLP} &lt;/UsePredicNet&gt;
-                &lt;/ScoreLearnedMMVII&gt;
-            &lt;/TypeCAH&gt;
-        &lt;/CorrelAdHoc&gt;
-&lt;/EtapeMEC&gt;	
-&lt;EtapeMEC&gt; 
-    &lt;DeZoom&gt; 1  &lt;/DeZoom&gt; 
-        &lt;CorrelAdHoc&gt;
-            &lt;SzBlocAH&gt; 40000000 &lt;/SzBlocAH&gt;
-            &lt;TypeCAH&gt;
-                &lt;ScoreLearnedMMVII &gt;
-                    &lt;FileModeleCost&gt; MVCNNCorrel&lt;/FileModeleCost&gt;
-                    &lt;FileModeleParams&gt;../MODEL_MSAFF_AERIAL_DECISION/.*.pt&lt;/FileModeleParams&gt;
-                    &lt;FileModeleArch&gt;UnetMLPMatcher&lt;/FileModeleArch&gt;
-                    &lt;Cuda&gt; ${OnCuda} &lt;/Cuda&gt;
-		&lt;UsePredicNet&gt; ${UseMLP} &lt;/UsePredicNet&gt;
-                &lt;/ScoreLearnedMMVII&gt;
-            &lt;/TypeCAH&gt;
-        &lt;/CorrelAdHoc&gt;
     
-&lt;/EtapeMEC&gt;
-</pre></div>
-</div>
-   <!-- <EtapeMEC>
-        <DeZoom > 1 </DeZoom>
-        <Px1Pas>   0.5  </Px1Pas>
-    </EtapeMEC> -->
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>&lt;EtapeMEC&gt;
-        &lt;DeZoom&gt;  1  &lt;/DeZoom&gt;
-        &lt;Px1Pas&gt;   1.0     &lt;/Px1Pas&gt;
-        &lt;AlgoRegul&gt; eAlgoDequant &lt;/AlgoRegul&gt;
-&lt;/EtapeMEC&gt; 
+	&lt;EtapeMEC&gt; &lt;DeZoom&gt; 8  &lt;/DeZoom&gt; 
+            &lt;CorrelAdHoc&gt;
+                &lt;SzBlocAH&gt; 40000000 &lt;/SzBlocAH&gt;
+                &lt;TypeCAH&gt;
+                    &lt;ScoreLearnedMMVII &gt;
+                        &lt;FileModeleCost&gt; MVCNNCorrel&lt;/FileModeleCost&gt;
+                        &lt;FileModeleParams&gt;../MODEL_MSAFF_AERIAL_DECISION/.*.pt&lt;/FileModeleParams&gt;
+                        &lt;FileModeleArch&gt;UnetMLPMatcher&lt;/FileModeleArch&gt;
+                        &lt;Cuda&gt; ${OnCuda} &lt;/Cuda&gt;
+			&lt;UsePredicNet&gt; ${UseMLP} &lt;/UsePredicNet&gt;
+                    &lt;/ScoreLearnedMMVII&gt;
+                &lt;/TypeCAH&gt;
+            &lt;/CorrelAdHoc&gt;
+       &lt;/EtapeMEC&gt;
+  
+	&lt;EtapeMEC&gt; &lt;DeZoom&gt; 4  &lt;/DeZoom&gt; 
+            &lt;CorrelAdHoc&gt;
+                &lt;SzBlocAH&gt; 40000000 &lt;/SzBlocAH&gt;
+                &lt;TypeCAH&gt;
+                    &lt;ScoreLearnedMMVII &gt;
+                        &lt;FileModeleCost&gt; MVCNNCorrel&lt;/FileModeleCost&gt;
+                        &lt;FileModeleParams&gt;../MODEL_MSAFF_AERIAL_DECISION/.*.pt&lt;/FileModeleParams&gt;
+                        &lt;FileModeleArch&gt;UnetMLPMatcher&lt;/FileModeleArch&gt;
+                        &lt;Cuda&gt; ${OnCuda} &lt;/Cuda&gt;
+			&lt;UsePredicNet&gt; ${UseMLP} &lt;/UsePredicNet&gt;
+                    &lt;/ScoreLearnedMMVII&gt;
+                &lt;/TypeCAH&gt;
+            &lt;/CorrelAdHoc&gt;
+       &lt;/EtapeMEC&gt;
+	&lt;EtapeMEC&gt; 
+        &lt;DeZoom&gt; 2  &lt;/DeZoom&gt; 
+            &lt;CorrelAdHoc&gt;
+                &lt;SzBlocAH&gt; 40000000 &lt;/SzBlocAH&gt;
+                &lt;TypeCAH&gt;
+                    &lt;ScoreLearnedMMVII &gt;
+                        &lt;FileModeleCost&gt; MVCNNCorrel&lt;/FileModeleCost&gt;
+                        &lt;FileModeleParams&gt;../MODEL_MSAFF_AERIAL_DECISION/.*.pt&lt;/FileModeleParams&gt;
+                        &lt;FileModeleArch&gt;UnetMLPMatcher&lt;/FileModeleArch&gt;
+                        &lt;Cuda&gt; ${OnCuda} &lt;/Cuda&gt;
+			&lt;UsePredicNet&gt; ${UseMLP} &lt;/UsePredicNet&gt;
+                    &lt;/ScoreLearnedMMVII&gt;
+                &lt;/TypeCAH&gt;
+            &lt;/CorrelAdHoc&gt;
+    &lt;/EtapeMEC&gt;	
+    &lt;EtapeMEC&gt; 
+        &lt;DeZoom&gt; 1  &lt;/DeZoom&gt; 
+            &lt;CorrelAdHoc&gt;
+                &lt;SzBlocAH&gt; 40000000 &lt;/SzBlocAH&gt;
+                &lt;TypeCAH&gt;
+                    &lt;ScoreLearnedMMVII &gt;
+                        &lt;FileModeleCost&gt; MVCNNCorrel&lt;/FileModeleCost&gt;
+                        &lt;FileModeleParams&gt;../MODEL_MSAFF_AERIAL_DECISION/.*.pt&lt;/FileModeleParams&gt;
+                        &lt;FileModeleArch&gt;UnetMLPMatcher&lt;/FileModeleArch&gt;
+                        &lt;Cuda&gt; ${OnCuda} &lt;/Cuda&gt;
+			&lt;UsePredicNet&gt; ${UseMLP} &lt;/UsePredicNet&gt;
+                    &lt;/ScoreLearnedMMVII&gt;
+                &lt;/TypeCAH&gt;
+            &lt;/CorrelAdHoc&gt;
+        
+    &lt;/EtapeMEC&gt;
     
-&lt;HighPrecPyrIm&gt; false &lt;/HighPrecPyrIm&gt;
+   &lt;!-- &lt;EtapeMEC&gt;
+        &lt;DeZoom &gt; 1 &lt;/DeZoom&gt;
+        &lt;Px1Pas&gt;   0.5  &lt;/Px1Pas&gt;
+    &lt;/EtapeMEC&gt; --&gt;
 
-&lt;TypePyramImage&gt;
-           &lt;Resol &gt;    1          &lt;/Resol&gt;
-           &lt;DivIm&gt;    1 &lt;/DivIm&gt;
-           &lt;TypeEl&gt;  eFloat32Bits   &lt;/TypeEl&gt;
-    &lt;/TypePyramImage&gt;
-</pre></div>
-</div>
-<p>&lt;/Section_MEC&gt;</p>
-<!--  *************************************************************
+    &lt;EtapeMEC&gt;
+            &lt;DeZoom&gt;  1  &lt;/DeZoom&gt;
+            &lt;Px1Pas&gt;   1.0     &lt;/Px1Pas&gt;
+            &lt;AlgoRegul&gt; eAlgoDequant &lt;/AlgoRegul&gt;
+	&lt;/EtapeMEC&gt; 
+        
+	&lt;HighPrecPyrIm&gt; false &lt;/HighPrecPyrIm&gt;
+    
+	&lt;TypePyramImage&gt;
+               &lt;Resol &gt;    1          &lt;/Resol&gt;
+               &lt;DivIm&gt;    1 &lt;/DivIm&gt;
+               &lt;TypeEl&gt;  eFloat32Bits   &lt;/TypeEl&gt;
+        &lt;/TypePyramImage&gt;
+
+&lt;/Section_MEC&gt;
+
+&lt;!--  *************************************************************
        Parametres fixant les resultats
-     devant etre produits par l'algo
--->
-<p>&lt;Section_Results&gt;
-<GeomMNT> eGeomPxBiDim     </GeomMNT>
-<ZoomMakeTA> 16 </ZoomMakeTA>
-<GammaVisu> 2.0 </GammaVisu>
-<ZoomVisuLiaison> -1 </ZoomVisuLiaison></p>
-<p>&lt;/Section_Results&gt;</p>
-<!--  *************************************************************
+     devant etre produits par l&#39;algo
+--&gt;
+&lt;Section_Results&gt;
+    &lt;GeomMNT&gt; eGeomPxBiDim     &lt;/GeomMNT&gt;
+    &lt;ZoomMakeTA&gt; 16 &lt;/ZoomMakeTA&gt;
+    &lt;GammaVisu&gt; 2.0 &lt;/GammaVisu&gt;
+    &lt;ZoomVisuLiaison&gt; -1 &lt;/ZoomVisuLiaison&gt;
+    
+&lt;/Section_Results&gt;
+
+&lt;!--  *************************************************************
        Parametres lies a la gestions
-     du "chantier" sur la machine
--->
-<p>&lt;Section_WorkSpace&gt;</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>&lt;WorkDir&gt; ThisDir &lt;/WorkDir&gt; 
-&lt;TmpMEC&gt; ${DirMEC}/ &lt;/TmpMEC&gt;
-&lt;TmpResult&gt; ${DirMEC}/ &lt;/TmpResult&gt;
-&lt;TmpPyr&gt; ${DirPyram} &lt;/TmpPyr&gt;
-&lt;PurgeMECResultBefore&gt;  ${Purge} &lt;/PurgeMECResultBefore&gt;
+     du &quot;chantier&quot; sur la machine
+--&gt;
+&lt;Section_WorkSpace&gt;
 
-&lt;ByProcess&gt;  ${NbProc} &lt;/ByProcess&gt;
+    &lt;WorkDir&gt; ThisDir &lt;/WorkDir&gt; 
+    &lt;TmpMEC&gt; ${DirMEC}/ &lt;/TmpMEC&gt;
+    &lt;TmpResult&gt; ${DirMEC}/ &lt;/TmpResult&gt;
+    &lt;TmpPyr&gt; ${DirPyram} &lt;/TmpPyr&gt;
+    &lt;PurgeMECResultBefore&gt;  ${Purge} &lt;/PurgeMECResultBefore&gt;
 
-&lt;AvalaibleMemory&gt; 2048 &lt;/AvalaibleMemory&gt;
-&lt;SzDalleMin&gt; 540 &lt;/SzDalleMin&gt;
-&lt;SzDalleMax&gt; 512 &lt;/SzDalleMax&gt;
-&lt;SzRecouvrtDalles&gt; 20 &lt;/SzRecouvrtDalles&gt;
-&lt;SzMinDecomposCalc&gt; 40 &lt;/SzMinDecomposCalc&gt;
-&lt;ComprMasque&gt; eComprTiff_None &lt;/ComprMasque&gt;
+    &lt;ByProcess&gt;  ${NbProc} &lt;/ByProcess&gt;
+
+    &lt;AvalaibleMemory&gt; 2048 &lt;/AvalaibleMemory&gt;
+    &lt;SzDalleMin&gt; 540 &lt;/SzDalleMin&gt;
+    &lt;SzDalleMax&gt; 512 &lt;/SzDalleMax&gt;
+    &lt;SzRecouvrtDalles&gt; 20 &lt;/SzRecouvrtDalles&gt;
+    &lt;SzMinDecomposCalc&gt; 40 &lt;/SzMinDecomposCalc&gt;
+    &lt;ComprMasque&gt; eComprTiff_None &lt;/ComprMasque&gt;
+
+
+&lt;/Section_WorkSpace&gt;
+
+&lt;Section_Vrac&gt; 
+     &lt;DebugMM&gt; true&lt;/DebugMM&gt;
+&lt;/Section_Vrac&gt;
+
+&lt;/ParamMICMAC&gt;
 </pre></div>
 </div>
-<p>&lt;/Section_WorkSpace&gt;</p>
-<p>&lt;Section_Vrac&gt;
-<DebugMM> true</DebugMM>
-&lt;/Section_Vrac&gt;</p>
-</ParamMICMAC>
-`
-* The aformentionned xml file activates our models from `Zoom 4`, i.e models are in charge of reconstruction for zooms: 4,2,1.
-This is accomplished with and adhoc correlation that calls a set of .pt models (feature extraction + mlp).
-`
-            <CorrelAdHoc>
-                <SzBlocAH> 40000000 </SzBlocAH>
-                <TypeCAH>
-                    <ScoreLearnedMMVII >
-                        <FileModeleCost> MVCNNCorrel</FileModeleCost>
-                        <FileModeleParams>../MODEL_MSAFF_AERIAL_DECISION/.*.pt</FileModeleParams>
-                        <FileModeleArch>UnetMLPMatcher</FileModeleArch>
-                        <Cuda> ${OnCuda} </Cuda>
-			            <UsePredicNet> ${UseMLP} </UsePredicNet>
-                    </ScoreLearnedMMVII>
-                </TypeCAH>
-            </CorrelAdHoc>
-`
-* Parametrization: To launch stereo matching between a pair of epipolar images,
+<ul class="simple">
+<li><p>The aformentionned xml file activates our models from <code class="docutils literal notranslate"><span class="pre">Zoom</span> <span class="pre">4</span></code>, i.e models are in charge of reconstruction for zooms: 4,2,1.
+This is accomplished with and adhoc correlation that calls a set of .pt models (feature extraction + mlp).</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>            &lt;CorrelAdHoc&gt;
+                &lt;SzBlocAH&gt; 40000000 &lt;/SzBlocAH&gt;
+                &lt;TypeCAH&gt;
+                    &lt;ScoreLearnedMMVII &gt;
+                        &lt;FileModeleCost&gt; MVCNNCorrel&lt;/FileModeleCost&gt;
+                        &lt;FileModeleParams&gt;../MODEL_MSAFF_AERIAL_DECISION/.*.pt&lt;/FileModeleParams&gt;
+                        &lt;FileModeleArch&gt;UnetMLPMatcher&lt;/FileModeleArch&gt;
+                        &lt;Cuda&gt; ${OnCuda} &lt;/Cuda&gt;
+			            &lt;UsePredicNet&gt; ${UseMLP} &lt;/UsePredicNet&gt;
+                    &lt;/ScoreLearnedMMVII&gt;
+                &lt;/TypeCAH&gt;
+            &lt;/CorrelAdHoc&gt;
+
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Parametrization: To launch stereo matching between a pair of epipolar images,</p></li>
+</ul>
 <p><code class="docutils literal notranslate"><span class="pre">mm3d</span> <span class="pre">MICMAC</span> <span class="pre">File.xml</span> <span class="pre">+Im1=Im1.tif</span> <span class="pre">+Im2=Im2.tif</span>&#160; <span class="pre">+DirMEC=MEC/</span> <span class="pre">+OnCuda=0</span> <span class="pre">+UsePredicNet=1</span></code></p>
 </section>
 </section>
