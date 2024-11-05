@@ -99,7 +99,7 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Scripts</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#module-run">run</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#simlearner3d-train">simlearner3d.train</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-simlearner3d.train">simlearner3d.train</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="configs.html">Default configuration</a></li>
@@ -230,8 +230,48 @@
 </dd></dl>
 
 </section>
-<section id="simlearner3d-train">
-<h2>simlearner3d.train<a class="headerlink" href="#simlearner3d-train" title="Permalink to this headline"></a></h2>
+<section id="module-simlearner3d.train">
+<span id="simlearner3d-train"></span><h2>simlearner3d.train<a class="headerlink" href="#module-simlearner3d.train" title="Permalink to this headline"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="simlearner3d.train.train">
+<span class="sig-prename descclassname"><span class="pre">simlearner3d.train.</span></span><span class="sig-name descname"><span class="pre">train</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">omegaconf.dictconfig.DictConfig</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">pytorch_lightning.trainer.trainer.Trainer</span></span></span><a class="reference internal" href="../_modules/simlearner3d/train.html#train"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simlearner3d.train.train" title="Permalink to this definition"></a></dt>
+<dd><p>Training pipeline (+ Test, + Finetuning)</p>
+<p>Instantiates all PyTorch Lightning objects from config, then perform one of the following
+task based on parameter <cite>task.task_name</cite>:</p>
+<dl class="simple">
+<dt>fit:</dt><dd><p>Fits a neural network - train on a prepared training set and validate on a prepared validation set.
+Optionnaly, resume a checkpointed training by specifying config.model.ckpt_path.</p>
+</dd>
+<dt>test:</dt><dd><p>Tests a trained neural network on the test dataset of a prepared dataset (i.e. the <cite>test</cite> subdir
+which contains LAS files with a classification).</p>
+</dd>
+<dt>finetune:</dt><dd><p>Finetunes a checkpointed neural network on a prepared dataset, which must be specified
+in config.model.ckpt_path.
+In contrast to using fit, finetuning resumes training with altered conditions. This leads to a new,
+distinct training, and training state is reset (e.g. epoch starts from 0).</p>
+</dd>
+</dl>
+<p>Typical use case are</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>a different learning rate (config.model.lr) or a different scheduler (e.g. stronger config.model.lr_scheduler.patience)</p></li>
+<li><p>a different model to train on</p></li>
+<li><p>a different loss function …</p></li>
+</ul>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><span class="target" id="simlearner3d.train.train.params.config"></span><strong>config</strong><a class="paramlink headerlink reference internal" href="#simlearner3d.train.train.params.config">¶</a> (<em>DictConfig</em>) – Configuration composed by Hydra.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>lightning trainer.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Trainer</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 </section>
 
