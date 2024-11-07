@@ -178,13 +178,14 @@
 <span class="w">  </span><span class="nt">num_nodes</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
 <span class="w">  </span><span class="nt">num_sanity_val_steps</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
 <span class="w">  </span><span class="nt">accumulate_grad_batches</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4</span>
+<span class="w">  </span><span class="nt">precision</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">16-mixed</span>
 <span class="nt">datamodule</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">transforms</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">augmentations</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">ClipAndComputeUsingPatchSize</span><span class="p">:</span>
 <span class="w">        </span><span class="nt">_target_</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">simlearner3d.processing.transforms.augmentations.ClipAndComputeUsingPatchSize</span>
 <span class="w">        </span><span class="nt">tile_height</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1024</span>
-<span class="w">        </span><span class="nt">patch_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">768</span>
+<span class="w">        </span><span class="nt">patch_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${datamodule.patch_size}</span>
 <span class="w">    </span><span class="nt">normalizations</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">StandardizeIntensityCenterOnZero</span><span class="p">:</span>
 <span class="w">        </span><span class="nt">_target_</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">simlearner3d.processing.transforms.transforms.StandardizeIntensityCenterOnZero</span>
