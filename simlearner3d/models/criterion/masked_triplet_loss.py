@@ -8,8 +8,9 @@ class MaskedTripletLoss:
         return torch.clamp_min(F.cosine_similarity(anchor,negative)
                                    - F.cosine_similarity(anchor,positive)
                                    +self.margin,0).mul(torch.logical_not(occlusion_masq))+torch.clamp_min(
-                                       F.cosine_similarity(anchor,negative)
-                                        + F.cosine_similarity(anchor,positive)
+                                       F.cosine_similarity(anchor,negative),
+                                       0) + torch.clamp_min(
+                                           F.cosine_similarity(anchor,positive)
                                         ,0).mul(occlusion_masq)
     def __call__(self,anchor,positive,negative,occlusion_masq) -> torch.Tensor:
         return self.compute_loss(anchor,

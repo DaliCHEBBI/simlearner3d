@@ -1,7 +1,11 @@
 python run.py task.task_name="fit" \
-datamodule.hdf5_file_path="/media/.../DUBLIN_DENSE_TRAINING_1/Stereo/dublin.hdf5" \
+datamodule.hdf5_file_path="/home/.../Echantillon_dublin/Stereo/dublin.hdf5" \
 datamodule.masq_divider=255 \
+datamodule.patch_size=512 \
+datamodule.batch_size=2 \
 experiment="SIMDebug" \
+trainer.accelerator="cpu" \
+++trainer.accumulate_grad_batches=4 \
 model="msaff_model" \
 ++model.mode="feature" \
-++logger.comet.experiment_name="msaff_cos"
+logger=tensorboard

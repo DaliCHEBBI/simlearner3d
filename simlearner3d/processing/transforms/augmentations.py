@@ -32,16 +32,17 @@ class ClipAndComputeUsingPatchSize:
         y_upl=secrets.randbelow(self.tile_height-self.patch_size)
         # return a new data object 
         """
-        tf.imwrite("./check_disparity.tif", 
+        tf.imwrite("./check_disparity0.tif", 
                    data._disp[y_upl:y_upl+self.patch_size,x_upl:x_upl+self.patch_size].detach().numpy())
-        tf.imwrite("./check_masq.tif",
+        tf.imwrite("./check_masq0.tif",
                    data._masq[y_upl:y_upl+self.patch_size,x_upl:x_upl+self.patch_size].detach().numpy())
-        tf.imwrite("./check_left.tif",
+        tf.imwrite("./check_left0.tif",
                    data._left[y_upl:y_upl+self.patch_size,x_upl:x_upl+self.patch_size].detach().numpy())
         print("moyenne disparite ", x_upl)
-        tf.imwrite("./check_right.tif",
+        tf.imwrite("./check_right0.tif",
                    data._right[y_upl:y_upl+self.patch_size,:].detach().numpy())
-        """           
+        """
+              
         return Data(
             _left=data._left[y_upl:y_upl+self.patch_size,x_upl:x_upl+self.patch_size],
             _right=data._right[y_upl:y_upl+self.patch_size,:],

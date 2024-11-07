@@ -61,8 +61,11 @@ def extract(config: DictConfig):
 
     # copy parameters 
     feature_inference.load_state_dict(model.feature.state_dict())
+    
+
     for p1,p2 in zip (feature_inference.parameters(),model.feature.parameters()):
-        assert(torch.equal(p1,p2))
+        assert(torch.equal(p1.cpu(),p2.cpu()))
+        
     feature_inference_scrpt=torch.jit.script(feature_inference)
 
     out_feature_inference=config.model.ckpt_path.replace('.ckpt','_FEATURES.pt')
@@ -77,7 +80,7 @@ def extract(config: DictConfig):
         decision_network_inference.load_state_dict(model.decisionNet.state_dict())
         
         for p1,p2 in zip (decision_network_inference.parameters(),model.decisionNet.parameters()):
-            assert(torch.equal(p1,p2)) 
+            assert(torch.equal(p1.cpu(),p2.cpu())) 
         
         decision_network_inference_scrpt=torch.jit.script(decision_network_inference)
         

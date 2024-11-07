@@ -315,8 +315,8 @@ def run_stats(net, test_loader, device,nans=0.0):
                                      nans,
                                      false1=net.false1,
                                      false2=net.false2)
-        print(" min max simP ", torch.min(simP), "  ", torch.max(simP))
-        print(" min max simN ", torch.min(simN), "  ", torch.max(simN))
+        #print(" min max simP ", torch.min(simP), "  ", torch.max(simP))
+        #print(" min max simN ", torch.min(simN), "  ", torch.max(simN))
         gc.collect()
         print("Sizes of matching similarity tile ",simP.shape)
         # compute loss
@@ -418,9 +418,14 @@ def qualify(config: DictConfig):
 
     # Data loader for testing 
     test_dataloader=datamodule.test_dataloader()
-    device=torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
+    device=torch.device("cuda") if config.trainer.accelerator =="gpu" else torch.device("cpu") 
+    #device=torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     model=model.to(device)
-    Simsplus, Simsmoins=run_stats(model,test_dataloader,device,nans=0.0)
+    Simsplus, Simsmoins=run_stats(model,
+                                  test_dataloader,
+                                  device,
+                                  nans=0.0)
     Simsplus=np.concatenate(Simsplus, axis=0 )
     Simsmoins=np.concatenate(Simsmoins, axis=0 )
 
