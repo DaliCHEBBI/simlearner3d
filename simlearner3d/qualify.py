@@ -243,7 +243,11 @@ def testing_step_dense(batch,
                        ):
         
     x0,x1,dispnoc0,Mask0,x_offset=batch
-
+    
+    dispnoc0=dispnoc0.to(device)
+    Mask0=Mask0.to(device)
+    x_offset=x_offset.to(device)
+    
     MaskDef=(dispnoc0!=nans)
     
     FeatsL=modulems.feature(x0.to(device)) 
@@ -251,7 +255,7 @@ def testing_step_dense(batch,
     FeatsR=modulems.feature(x1.to(device))
     
     Offset_neg=((false1 - false2) * torch.rand(dispnoc0.size(),device=device) + false2)
-    
+
     RandSens=torch.rand(dispnoc0.size(),device=device)
     
     RandSens=((RandSens < 0.5).float()+(RandSens >= 0.5).float()*(-1.0))
@@ -426,6 +430,7 @@ def qualify(config: DictConfig):
                                   test_dataloader,
                                   device,
                                   nans=0.0)
+
     Simsplus=np.concatenate(Simsplus, axis=0 )
     Simsmoins=np.concatenate(Simsmoins, axis=0 )
 
