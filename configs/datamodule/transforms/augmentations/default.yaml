@@ -1,12 +1,11 @@
-ClipAndComputeUsingPatchSize:
-  _target_: simlearner3d.processing.transforms.augmentations.ClipAndComputeUsingPatchSize
-  tile_height: 1024
-  patch_size: ${datamodule.patch_size}   
-
 DownScaleImage:
   _target_: simlearner3d.processing.transforms.augmentations.DownScaleImage
   scales: [0.125,0.25,0.5]
 
+ClipAndComputeUsingPatchSize:
+  _target_: simlearner3d.processing.transforms.augmentations.ClipAndComputeUsingPatchSize
+  tile_height: 1024
+  patch_size: ${datamodule.patch_size}   
 
 VerticalFlip:
   _target_: simlearner3d.processing.transforms.augmentations.VerticalFlip
