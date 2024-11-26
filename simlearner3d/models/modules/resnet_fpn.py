@@ -82,13 +82,13 @@ class ResNetFPN_8_1(nn.Module):
             conv3x3(block_dims[1], block_dims[0]),
         )
 
-        self.layer0_outconv = conv1x1(block_dims[0], initial_dim)
+        """self.layer0_outconv = conv1x1(block_dims[0], initial_dim)
         self.layer0_outconv1 = nn.Sequential(
             conv3x3(block_dims[0], block_dims[0]),
             nn.BatchNorm2d(block_dims[0]),
             nn.LeakyReLU(),
             conv3x3(block_dims[0], initial_dim),
-        )
+        )"""
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -125,10 +125,10 @@ class ResNetFPN_8_1(nn.Module):
 
         x1_out_1x = F.interpolate(x1_out, scale_factor=2., mode='bilinear', align_corners=True) # res 1
 
-        x0_out=self.layer0_outconv(x0)
-        x0_out= self.layer0_outconv1(x0_out+x1_out_1x)
+        #x0_out=self.layer0_outconv(x0)
+        #x0_out= self.layer0_outconv1(x0_out+x1_out_1x)
 
-        return x0_out
+        return x1_out_1x
 
 
 
@@ -174,13 +174,13 @@ class ResNetFPN_8_1_Inference(nn.Module):
             conv3x3(block_dims[1], block_dims[0]),
         )
 
-        self.layer0_outconv = conv1x1(block_dims[0], initial_dim)
+        """self.layer0_outconv = conv1x1(block_dims[0], initial_dim)
         self.layer0_outconv1 = nn.Sequential(
             conv3x3(block_dims[0], block_dims[0]),
             nn.BatchNorm2d(block_dims[0]),
             nn.LeakyReLU(),
             conv3x3(block_dims[0], initial_dim),
-        )
+        )"""
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -230,17 +230,17 @@ class ResNetFPN_8_1_Inference(nn.Module):
 
         x1_out_1x = F.interpolate(x1_out, scale_factor=2., mode='bilinear', align_corners=True) # res 1
 
-        x0_out=self.layer0_outconv(x0)
-        x0_out= self.layer0_outconv1(x0_out+x1_out_1x)
+        #x0_out=self.layer0_outconv(x0)
+        #x0_out= self.layer0_outconv1(x0_out+x1_out_1x)
 
         if top_pad !=0 and right_pad != 0:
-            out = x0_out[:,:,top_pad:,:-right_pad]
+            out = x1_out_1x[:,:,top_pad:,:-right_pad]
         elif top_pad ==0 and right_pad != 0:
-            out = x0_out[:,:,:,:-right_pad]
+            out = x1_out_1x[:,:,:,:-right_pad]
         elif top_pad !=0 and right_pad == 0:
-            out = x0_out[:,:,top_pad:,:]
+            out = x1_out_1x[:,:,top_pad:,:]
         else:
-            out = x0_out
+            out = x1_out_1x
         return out
 
 
