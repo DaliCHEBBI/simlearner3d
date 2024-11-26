@@ -19,6 +19,7 @@ from torch import nn
 from simlearner3d.models.generic_model import Model
 
 from simlearner3d.models.modules.msaff import MSNet,MSNETInferenceGatedAttention
+from simlearner3d.models.modules.resnet_fpn import ResNetFPN_8_1,ResNetFPN_8_1_Inference
 from simlearner3d.models.modules.unet import UNet,UNetInference
 from simlearner3d.models.modules.unetgatedattention import UNetGatedAttention, UNetInferenceGatedAttention
 from simlearner3d.models.modules.decision_net import DecisionNetworkOnCube
@@ -29,8 +30,8 @@ log = utils.get_logger(__name__)
 
 NEURAL_NET_ARCHITECTURE_CONFIG_GROUP = "neural_net"
 
-MODEL_ZOO = [MSNet,UNet,UNetGatedAttention]
-MODEL_INFERENCE_ZOO=[MSNETInferenceGatedAttention,UNetInference,UNetInferenceGatedAttention]
+MODEL_ZOO = [ResNetFPN_8_1,MSNet,UNet,UNetGatedAttention]
+MODEL_INFERENCE_ZOO=[ResNetFPN_8_1_Inference,MSNETInferenceGatedAttention,UNetInference,UNetInferenceGatedAttention]
 
 DEFAULT_MODE="feature"
 
@@ -97,7 +98,6 @@ def PlotJointDistribution(Simsplus,
     for j in range(200):
         for i in range(j+1):
             if (values[j,i]!='--'):
-                print(values)
                 SUM_GOOD+=values[j,i]   
     pourcent=str("%.2f" % SUM_GOOD)+" %"       
 

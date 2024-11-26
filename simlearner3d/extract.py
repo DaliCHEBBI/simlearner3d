@@ -11,6 +11,7 @@ from torch import nn
 from simlearner3d.models.generic_model import Model
 
 from simlearner3d.models.modules.msaff import MSNet,MSNETInferenceGatedAttention
+from simlearner3d.models.modules.resnet_fpn import ResNetFPN_8_1,ResNetFPN_8_1_Inference
 from simlearner3d.models.modules.unet import UNet,UNetInference
 from simlearner3d.models.modules.unetgatedattention import UNetGatedAttention, UNetInferenceGatedAttention
 from simlearner3d.models.modules.decision_net import DecisionNetworkOnCube
@@ -20,8 +21,8 @@ log = utils.get_logger(__name__)
 
 NEURAL_NET_ARCHITECTURE_CONFIG_GROUP = "neural_net"
 
-MODEL_ZOO = [MSNet,UNet,UNetGatedAttention]
-MODEL_INFERENCE_ZOO=[MSNETInferenceGatedAttention,UNetInference,UNetInferenceGatedAttention]
+MODEL_ZOO = [ResNetFPN_8_1,MSNet,UNet,UNetGatedAttention]
+MODEL_INFERENCE_ZOO=[ResNetFPN_8_1_Inference,MSNETInferenceGatedAttention,UNetInference,UNetInferenceGatedAttention]
 
 
 def get_inference_neural_net_class(class_training: nn.Module) -> nn.Module:
@@ -89,14 +90,4 @@ def extract(config: DictConfig):
         torch.jit.save(decision_network_inference_scrpt,out_decision_inference)
 
         print("Model Decision is saved as : ", out_decision_inference)
-
-
-
-
-
-
-
-
-
-
 
