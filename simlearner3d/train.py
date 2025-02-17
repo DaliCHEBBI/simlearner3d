@@ -167,9 +167,9 @@ def train(config: DictConfig) -> Trainer:
             NEURAL_NET_ARCHITECTURE_CONFIG_GROUP, None
         )  # removes that key if it's there
         # check if model similarity or regressiion( psmnet)
-        if model.__name__=="ModelReg" and model.load_pretrained==True:
-            model = ModelReg.load_trained_assets(config.model.ckpt_path)
-        elif model.__name__=="ModelReg":
+        if isinstance(model,ModelReg) and model.load_pretrained==True:
+            model.load_trained_assets(config.model.ckpt_path)
+        elif isinstance(model,ModelReg):
             model = ModelReg.load_from_checkpoint(config.model.ckpt_path, **kwargs_to_override)
         else:
             model = Model.load_from_checkpoint(config.model.ckpt_path, **kwargs_to_override)

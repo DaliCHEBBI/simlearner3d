@@ -14,6 +14,7 @@ max_disparity: 192
 learning_rate: 0.001
 load_pretrained: true
 model: 'stackhourglass'
+channel: ${model.channel}
 
 
 defaults:

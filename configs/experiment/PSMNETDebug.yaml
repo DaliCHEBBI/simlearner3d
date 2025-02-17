@@ -1,6 +1,6 @@
 # @package _global_
 defaults:
-  - override /datamodule/transforms/augmentations: none.yaml
+  - override /datamodule/transforms/augmentations: forregression.yaml
 # Nota : may need to call
 #   python simlearner3d/processing/dataset/toy_dataset.py
 # to create a toy dataset before running this.
@@ -9,7 +9,7 @@ logger:
   comet:
     experiment_name: ""
     disabled: false
-
+    
 trainer:
   accelerator: cpu
   #limit_train_batches: 1.0

@@ -1,7 +1,9 @@
 python run.py task.task_name="fit" \
-datamodule.hdf5_file_path="/media/.../DUBLIN_DENSE_TRAINING_1/Stereo/dublin.hdf5" \
+datamodule.hdf5_file_path="/media/mohamedali/GEOMAKER/Stereo/dublin.hdf5" \
 datamodule.masq_divider=255 \
 experiment="SIMDebug" \
+trainer.accelerator="cpu" \
+++trainer.precision="16" \
 model="unet_model" \
 ++model.mode="feature" \
-++logger.comet.experiment_name="unet_cos"
+++logger.comet.experiment_name="unet_cos_test_after_integr_psmnet"

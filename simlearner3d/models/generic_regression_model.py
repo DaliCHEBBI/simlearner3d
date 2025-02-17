@@ -59,6 +59,7 @@ class ModelReg(LightningModule):
         self.maxdisp=kwargs.get("max_disparity")
         self.learning_rate=kwargs.get("learning_rate")
         self.load_pretrained=kwargs.get("load_pretrained")
+        self.channel=kwargs.get("channel")
         self.nbsteps=0
         neural_net_class = get_neural_net_class(kwargs.get("neural_net_class_name"))
         self.regressor = neural_net_class(**kwargs.get("neural_net_hparams"))
@@ -70,7 +71,10 @@ class ModelReg(LightningModule):
         self.regressor.load_state_dict(state_dict_new)
 
     def training_step(self,batch, batch_idx: int):
-        x0,x1,dispnoc0,_,_=batch        
+        x0,x1,dispnoc0,_,_=batch
+        if self.channel>1 and x0.shape[1]==1:
+            x0=x0.tile((1,self.channel,1,1))
+            x1=x1.tile((1,self.channel,1,1))  
         mask = (dispnoc0 < self.maxdisp) * (dispnoc0 != self.nanvalue) # add non defined values in case where sparse disparity
         mask.detach_()
 
@@ -96,11 +100,14 @@ class ModelReg(LightningModule):
         return training_loss.data
 
     def validation_step(self,batch,batch_idx: int):
-        x0,x1,dispnoc0,_,_=batch        
+        x0,x1,dispnoc0,_,_=batch
+        if self.channel>1 and x0.shape[1]==1:
+            x0=x0.tile((1,self.channel,1,1))
+            x1=x1.tile((1,self.channel,1,1))
+                  
         #device='cuda' if x0.is_cuda else 'cpu'
         mask = (dispnoc0 < self.maxdisp) * (dispnoc0!=self.nanvalue) # add non defined values in case where sparse disparity
         mask.detach_()
-
         if self.model == 'stackhourglass':
             output1, output2, output3 = self.regressor(x0,x1)
             output1 = torch.squeeze(output1,1)
@@ -125,7 +132,10 @@ class ModelReg(LightningModule):
         return validation_loss.data
     
     def test_step(self,batch,batch_idx: int):
-        x0,x1,dispnoc0,_,_=batch        
+        x0,x1,dispnoc0,_,_=batch
+        if self.channel>1 and x0.shape[1]==1:
+            x0=x0.tile((1,self.channel,1,1))
+            x1=x1.tile((1,self.channel,1,1))         
         mask = (dispnoc0 < self.maxdisp) * (dispnoc0!=self.nanvalue) # add non defined values in case where sparse disparity
         mask.detach_()
 

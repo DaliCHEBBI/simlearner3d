@@ -109,7 +109,7 @@ class PSMNet(nn.Module):
 
         #matching
         #pdb.set_trace()
-        if torch.cuda.is_available() :
+        if torch.cuda.is_available():
             cost = Variable(torch.FloatTensor(refimg_fea.size()[0], refimg_fea.size()[1]*2, self.maxdisp//4,  refimg_fea.size()[2],  refimg_fea.size()[3]).zero_()).cuda()
         else:
             cost = Variable(torch.FloatTensor(refimg_fea.size()[0], refimg_fea.size()[1]*2, self.maxdisp//4,  refimg_fea.size()[2],  refimg_fea.size()[3]).zero_())

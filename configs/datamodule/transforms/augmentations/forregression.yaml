@@ -1,0 +1,4 @@
+ClipAndComputeUsingPatchSizeRegression:
+  _target_: simlearner3d.processing.transforms.augmentations.ClipAndComputeUsingPatchSizeRegression
+  tile_height: 1024
+  patch_size: ${datamodule.patch_size}   
