@@ -1,0 +1,14 @@
+python run.py task.task_name="finetune" \
+datamodule.hdf5_file_path="/media/mohamedali/GEOMAKER/Stereo/dublin.hdf5" \
+datamodule.masq_divider=255 \
+datamodule.patch_size=512 \
+datamodule.batch_size=2 \
+experiment="PSMNETDebug" \
+trainer.accelerator="cpu" \
+++trainer.accumulate_grad_batches=4 \
+++trainer.precision="16" \
+model="psmnet" \
+++model.load_pretrained=true \
++model.ckpt_path="/home/mohamedali/opt/simlearner3d/simlearner3d/models/PSMNet/models/trained_assets/finetune_PSMnet.tar" \
+++model.channel=3 \
+logger=tensorboard

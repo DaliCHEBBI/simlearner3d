@@ -49,6 +49,25 @@ def launch_train(
 
 
 @hydra.main(config_path="configs/", config_name="config.yaml")
+def launch_predict(config: DictConfig):
+    """Infer disparity maps fropm a pair of left and right epipolar images """
+    # Imports should be nested inside @hydra.main to optimize tab completion
+    # Read more here: https://github.com/facebookresearch/hydra/issues/934
+    from simlearner3d.predict import predict
+
+    # hydra changes current directory, so we make sure the checkpoint has an absolute path
+    if not os.path.isabs(config.predict.ckpt_path):
+        config.predict.ckpt_path = os.path.join(
+            os.path.dirname(__file__), config.predict.ckpt_path
+        )
+
+    # Pretty print config using Rich library
+    if config.get("print_config"):
+        utils.print_config(config, resolve=False)
+
+    predict(config)
+
+@hydra.main(config_path="configs/", config_name="config.yaml")
 def launch_extract(
     config:DictConfig
 ):  # pragma: no cover  (it's just an initialyzer of a class/method tested elsewhere)
@@ -122,6 +141,10 @@ if __name__=="__main__":
     elif task_name == TASK_NAMES.HDF5.value:
         dotenv.load_dotenv(os.path.join(DEFAULT_DIRECTORY, DEFAULT_ENV))
         launch_hdf5()
+
+    elif task_name == TASK_NAMES.PREDICT.value:
+        dotenv.load_dotenv(os.path.join(DEFAULT_DIRECTORY, DEFAULT_ENV))
+        launch_predict()
 
     elif task_name == TASK_NAMES.EXTRACT.value:
         dotenv.load_dotenv(override=True)

@@ -1,0 +1,23 @@
+_target_: simlearner3d.models.generic_regression_model.ModelReg
+
+# Architecture defined in sub-configs
+ckpt_path: null #"models/PSMNet/models/trained_assets/finetune_PSMnet.tar"  # str, for resuming training and finetuning.
+neural_net_class_name: "PSMNet"   # can take "psmnet_basic"
+neural_net_hparams: ???
+
+## Optimization
+momentum: 0.9  # arbitrary
+monitor: "val_loss"
+
+value_nan: 0.0
+max_disparity: 192
+learning_rate: 0.001
+load_pretrained: true
+model: 'stackhourglass'
+channel: ${model.channel}
+
+
+defaults:
+  - optimizer: Adam.yaml
+  - lr_scheduler: ReduceLROnPlateau.yaml
+  #- criterion: SmoothL1Loss.yaml

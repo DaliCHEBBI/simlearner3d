@@ -1,13 +1,8 @@
 _target_: simlearner3d.models.generic_model.Model
 
-## Inputs and outputs
-#d_in: ${dataset_description.d_in}  # XYZ (3) + Other features (N)
-#num_classes: ${dataset_description.num_classes}
-#classification_dict: ${dataset_description.classification_dict}
-
 # Architecture defined in sub-configs
 ckpt_path: null  # str, for resuming training and finetuning.
-neural_net_class_name: ???
+neural_net_class_name: "MSNet"
 neural_net_hparams: ???
 
 # Interpolation params
