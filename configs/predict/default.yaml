@@ -1,0 +1,6 @@
+left_image: "/path/to/left.tif"
+right_image: "/path/to/right.tif"
+disp_scale: 256
+output_dir: "/path/to/output_dir/"  # Predictions are saved in a new file which shares src_las basename.
+ckpt_path: "/path/to/lightning_model.ckpt"  # Checkpoint of trained model.
+gpus: 0

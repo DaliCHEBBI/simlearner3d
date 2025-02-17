@@ -1,0 +1,12 @@
+python run.py task.task_name="fit" \
+datamodule.hdf5_file_path="/media/mohamedali/GEOMAKER/Stereo/dublin.hdf5" \
+datamodule.masq_divider=255 \
+datamodule.patch_size=512 \
+datamodule.batch_size=2 \
+experiment="SIMDebug" \
+trainer.accelerator="cpu" \
+++trainer.accumulate_grad_batches=4 \
+++trainer.precision="16" \
+model="psmnet" \
+++model.channel=1 \
+logger=tensorboard

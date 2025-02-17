@@ -21,9 +21,11 @@ from pytorch_lightning import (
 )
 
 
-from pytorch_lightning.loggers import Logger
+from pytorch_lightning.loggers import LightningLoggerBase as Logger
 
 from simlearner3d.models.generic_model import Model
+from simlearner3d.models.generic_regression_model import ModelReg
+
 from simlearner3d.utils import utils
 from run import TASK_NAMES
 
@@ -164,7 +166,13 @@ def train(config: DictConfig) -> Trainer:
         kwargs_to_override.pop(
             NEURAL_NET_ARCHITECTURE_CONFIG_GROUP, None
         )  # removes that key if it's there
-        model = Model.load_from_checkpoint(config.model.ckpt_path, **kwargs_to_override)
+        # check if model similarity or regressiion( psmnet)
+        if model.__name__=="ModelReg" and model.load_pretrained==True:
+            model = ModelReg.load_trained_assets(config.model.ckpt_path)
+        elif model.__name__=="ModelReg":
+            model = ModelReg.load_from_checkpoint(config.model.ckpt_path, **kwargs_to_override)
+        else:
+            model = Model.load_from_checkpoint(config.model.ckpt_path, **kwargs_to_override)
         trainer.fit(model=model, datamodule=datamodule, ckpt_path=None)
         log.info(f"Best checkpoint:\n{trainer.checkpoint_callback.best_model_path}")
         log.info("End of training and validating!")

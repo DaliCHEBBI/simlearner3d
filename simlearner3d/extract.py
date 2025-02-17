@@ -9,6 +9,7 @@ import torch
 from torch import nn
 
 from simlearner3d.models.generic_model import Model
+from simlearner3d.models.generic_regression_model import ModelReg
 
 from simlearner3d.models.modules.msaff import MSNet,MSNETInferenceGatedAttention
 from simlearner3d.models.modules.unet import UNet,UNetInference
@@ -42,8 +43,8 @@ def extract(config: DictConfig):
     # Set seed for random number generators in pytorch, numpy and python.random
 
     log.info(f"Instantiating model <{config.model._target_}>")
-    model: LightningModule = hydra.utils.instantiate(config.model)
 
+    model: LightningModule = hydra.utils.instantiate(config.model)
     log.info("Extracting models architectures for inference!")
     # Instantiates the Model but overwrites everything with current config,
     # except module related params (nnet architecture)
@@ -53,42 +54,50 @@ def extract(config: DictConfig):
     )  # removes that key if it's there
     model = Model.load_from_checkpoint(config.model.ckpt_path, **kwargs_to_override)
 
-    neural_inference_network=get_inference_neural_net_class(model.feature)
-    print(neural_inference_network)
+    if model.__name__=="ModelReg":
 
-    print(kwargs_to_override.keys(),kwargs_to_override.values())
-    feature_inference=neural_inference_network(**kwargs_to_override["neural_net_hparams"])
+       savefilename =config.model.ckpt_path.replace('.ckpt','_psmnet.tar')
+       torch.save({
+		    'state_dict': model.regressor.state_dict(),
+		}, savefilename)
+       print("Model PSMNet state_dict has been saved to :   ",savefilename)
+    else:
+        neural_inference_network=get_inference_neural_net_class(model.feature)
+        print(neural_inference_network)
 
-    # copy parameters 
-    feature_inference.load_state_dict(model.feature.state_dict())
-    
+        print(kwargs_to_override.keys(),kwargs_to_override.values())
+        feature_inference=neural_inference_network(**kwargs_to_override["neural_net_hparams"])
 
-    for p1,p2 in zip (feature_inference.parameters(),model.feature.parameters()):
-        assert(torch.equal(p1.cpu(),p2.cpu()))
+        # copy parameters 
+        feature_inference.load_state_dict(model.feature.state_dict())
         
-    feature_inference_scrpt=torch.jit.script(feature_inference)
 
-    out_feature_inference=config.model.ckpt_path.replace('.ckpt','_FEATURES.pt')
-    torch.jit.save(feature_inference_scrpt,out_feature_inference)
+        for p1,p2 in zip (feature_inference.parameters(),model.feature.parameters()):
+            assert(torch.equal(p1.cpu(),p2.cpu()))
+            
+        feature_inference_scrpt=torch.jit.script(feature_inference)
 
-    print("Model Feature is saved as : ", out_feature_inference)
+        out_feature_inference=config.model.ckpt_path.replace('.ckpt','_FEATURES.pt')
+        torch.jit.save(feature_inference_scrpt,out_feature_inference)
 
-    MODE=model.mode
-    if MODE=="feature+decision":
-        decision_network_inference=DecisionNetworkOnCube(128)
-        
-        decision_network_inference.load_state_dict(model.decisionNet.state_dict())
-        
-        for p1,p2 in zip (decision_network_inference.parameters(),model.decisionNet.parameters()):
-            assert(torch.equal(p1.cpu(),p2.cpu())) 
-        
-        decision_network_inference_scrpt=torch.jit.script(decision_network_inference)
-        
-        out_decision_inference=config.model.ckpt_path.replace('.ckpt','_DECISION_NET.pt')
-        
-        torch.jit.save(decision_network_inference_scrpt,out_decision_inference)
+        print("Model Feature is saved as : ", out_feature_inference)
 
-        print("Model Decision is saved as : ", out_decision_inference)
+        MODE=model.mode
+        if MODE=="feature+decision":
+            decision_network_inference=DecisionNetworkOnCube(128)
+            
+            decision_network_inference.load_state_dict(model.decisionNet.state_dict())
+            
+            for p1,p2 in zip (decision_network_inference.parameters(),model.decisionNet.parameters()):
+                assert(torch.equal(p1.cpu(),p2.cpu())) 
+            
+            decision_network_inference_scrpt=torch.jit.script(decision_network_inference)
+            
+            out_decision_inference=config.model.ckpt_path.replace('.ckpt','_DECISION_NET.pt')
+            
+            torch.jit.save(decision_network_inference_scrpt,out_decision_inference)
+
+            print("Model Decision is saved as : ", out_decision_inference)
 
 
 
