@@ -2,6 +2,7 @@ import torch
 from pytorch_lightning import LightningModule
 from torch import nn
 
+from simlearner3d.models.modules.resnet_fpn import ResNetFPN_8_1, ResNetFPN_16_4
 from simlearner3d.models.modules.msaff import MSNet
 from simlearner3d.models.modules.unet import UNet
 from simlearner3d.models.modules.unetgatedattention import UNetGatedAttention
@@ -11,7 +12,7 @@ from simlearner3d.utils import utils
 
 log = utils.get_logger(__name__)
 
-MODEL_ZOO = [MSNet,UNet,UNetGatedAttention]
+MODEL_ZOO = [ResNetFPN_8_1,MSNet,UNet,UNetGatedAttention]
 
 
 def get_neural_net_class(class_name: str) -> nn.Module:
