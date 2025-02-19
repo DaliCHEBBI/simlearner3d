@@ -1,11 +1,13 @@
 python run.py task.task_name="fit" \
-datamodule.hdf5_file_path="/home/.../Echantillon_dublin/Stereo/dublin.hdf5" \
+datamodule.hdf5_file_path="/var/data/MAChebbi/dublin.hdf5" \
 datamodule.masq_divider=255 \
 datamodule.patch_size=512 \
 datamodule.batch_size=2 \
 experiment="SIMDebug" \
-trainer.accelerator="cpu" \
+trainer.accelerator="gpu" \
 ++trainer.accumulate_grad_batches=4 \
+++trainer.precision="16-mixed" \
 model="msaff_model" \
 ++model.mode="feature" \
-logger=tensorboard
+logger=comet \
+++logger.comet.experiment_name="test_msaff_cos_normalization_view"

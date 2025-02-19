@@ -1,0 +1,15 @@
+python run.py task.task_name="finetune" \
+datamodule.hdf5_file_path="/var/data/MAChebbi/dublin.hdf5" \
+datamodule.masq_divider=255 \
+datamodule.patch_size=512 \
+datamodule.batch_size=2 \
+experiment="SIMDebug" \
+trainer.accelerator="gpu" \
+++trainer.accumulate_grad_batches=4 \
+++trainer.precision="16-mixed" \
+model="msaff_mlp_model" \
+++model.mode="feature+decision" \
+++model.load_pretrained=true \
++model.ckpt_path="/home/MAChebbi/repositories/simlearner3d/simlearner3d/models/modules/trained_model_assets/MSAFF/epoch_5_step_11646.ckpt" \
+logger=comet \
+++logger.comet.experiment_name="finetune_msaff_cos_normalization_view"

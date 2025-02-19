@@ -25,7 +25,7 @@ class ClipAndComputeUsingPatchSize:
     def clip_sample(self, data: Data):
         """ use random clipping taken disparity constraints into account"""
         #import tifffile as tf 
-        _notocc=data._disp*data._masq
+        _notocc=(data._disp>=0.0)*data._masq
         _mean_disparity=int(torch.mean(_notocc[_notocc!=0.0]))
         #print("mean disparity ",np.mean(_notocc[_notocc!=0.0].detach().numpy()))
         x_upl=_mean_disparity+secrets.randbelow(self.tile_height-self.patch_size-_mean_disparity)
@@ -67,14 +67,14 @@ class ClipAndComputeUsingPatchSizeRegression:
     def clip_sample(self, data: Data):
         """ use random clipping taken disparity constraints into account"""
         #import tifffile as tf 
-        _notocc=data._disp*data._masq
+        _notocc=(data._disp>=0.0)*data._masq
         _mean_disparity=int(torch.mean(_notocc[_notocc!=0.0]))
         #print("mean disparity ",np.mean(_notocc[_notocc!=0.0].detach().numpy()))
         x_upl=_mean_disparity+secrets.randbelow(self.tile_height-self.patch_size-_mean_disparity)
         y_upl=secrets.randbelow(self.tile_height-self.patch_size)
         # return a new data object 
-        """
-        tf.imwrite("./check_disparity0.tif", 
+        
+        """tf.imwrite("./check_disparity0.tif", 
                    data._disp[y_upl:y_upl+self.patch_size,x_upl:x_upl+self.patch_size].detach().numpy())
         tf.imwrite("./check_masq0.tif",
                    data._masq[y_upl:y_upl+self.patch_size,x_upl:x_upl+self.patch_size].detach().numpy())
@@ -82,8 +82,8 @@ class ClipAndComputeUsingPatchSizeRegression:
                    data._left[y_upl:y_upl+self.patch_size,x_upl:x_upl+self.patch_size].detach().numpy())
         print("moyenne disparite ", x_upl)
         tf.imwrite("./check_right0.tif",
-                   data._right[y_upl:y_upl+self.patch_size,:].detach().numpy())
-        """
+                   data._right[y_upl:y_upl+self.patch_size,x_upl:x_upl+self.patch_size].detach().numpy())"""
+        
               
         return Data(
             _left=data._left[y_upl:y_upl+self.patch_size,x_upl:x_upl+self.patch_size],

@@ -6,4 +6,14 @@ docs/build
 simlearner3d/processing/datamodule/__pycache__/*.pyc
 simlearner3d/processing/dataset/__pycache__/*.pyc
 simlearner3d/processing/transforms/__pycache__/*.pyc
+simlearner3d/processing/datamodule/__pycache__/__init__.cpython-39.pyc
+simlearner3d/processing/datamodule/__pycache__/hdf5.cpython-39.pyc
+simlearner3d/processing/dataset/__pycache__/__init__.cpython-39.pyc
+simlearner3d/processing/dataset/__pycache__/hdf5.cpython-39.pyc
+simlearner3d/processing/dataset/__pycache__/utils.cpython-39.pyc
+simlearner3d/processing/transforms/__pycache__/__init__.cpython-39.pyc
+simlearner3d/processing/transforms/__pycache__/compose.cpython-39.pyc
+simlearner3d/processing/transforms/__pycache__/transforms.cpython-39.pyc
+simlearner3d/models/modules/trained_model_assets/UNET_ATTENTION/epoch_11_step_22321.ckpt
+simlearner3d/models/modules/trained_model_assets/UNET32/epoch_11_step_22321.ckpt
 .env

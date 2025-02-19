@@ -55,7 +55,7 @@ def extract(config: DictConfig):
     )  # removes that key if it's there
     model = Model.load_from_checkpoint(config.model.ckpt_path, **kwargs_to_override)
 
-    if model.__name__=="ModelReg":
+    if isinstance(model,ModelReg):
 
        savefilename =config.model.ckpt_path.replace('.ckpt','_psmnet.tar')
        torch.save({

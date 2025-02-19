@@ -75,6 +75,8 @@ class ModelReg(LightningModule):
         if self.channel>1 and x0.shape[1]==1:
             x0=x0.tile((1,self.channel,1,1))
             x1=x1.tile((1,self.channel,1,1))  
+
+        dispnoc0=dispnoc0.squeeze()
         mask = (dispnoc0 < self.maxdisp) * (dispnoc0 != self.nanvalue) # add non defined values in case where sparse disparity
         mask.detach_()
 
@@ -90,16 +92,17 @@ class ModelReg(LightningModule):
             output = self.regressor(x0,x1)
             output = torch.squeeze(output,1)
             training_loss = F.smooth_l1_loss(output[mask], dispnoc0[mask], size_average=True)
+
         self.log("training_loss",
-                 training_loss.data, 
+                 training_loss, 
                  prog_bar=True,
                  logger=True, 
                  on_step=True, 
                  on_epoch=True,
                  sync_dist=True)
-        return training_loss.data
+        return training_loss
 
-    def validation_step(self,batch,batch_idx: int):
+    """def validation_step(self,batch,batch_idx: int):
         x0,x1,dispnoc0,_,_=batch
         if self.channel>1 and x0.shape[1]==1:
             x0=x0.tile((1,self.channel,1,1))
@@ -129,13 +132,43 @@ class ModelReg(LightningModule):
                  on_epoch=True,
                  sync_dist=True)
         
-        return validation_loss.data
+        return validation_loss.data"""
+    
+
+    def validation_step(self,batch,batch_idx: int):
+        x0,x1,dispnoc0,_,_=batch
+        if self.channel>1 and x0.shape[1]==1:
+            x0=x0.tile((1,self.channel,1,1))
+            x1=x1.tile((1,self.channel,1,1))
+        
+        dispnoc0=dispnoc0.squeeze()
+        #device='cuda' if x0.is_cuda else 'cpu'
+        mask = (dispnoc0 < self.maxdisp) * (dispnoc0!=self.nanvalue) # add non defined values in case where sparse disparity
+        mask.detach_()
+
+        print(mask.shape)
+
+        output = self.regressor(x0,x1)
+        output = torch.squeeze(output,1)
+        validation_loss = F.smooth_l1_loss(output[mask], dispnoc0[mask], size_average=True)
+
+        self.log("val_loss",
+                 validation_loss, 
+                 prog_bar=True,
+                 logger=True, 
+                 on_step=True, 
+                 on_epoch=True,
+                 sync_dist=True)
+        
+        return validation_loss
     
     def test_step(self,batch,batch_idx: int):
         x0,x1,dispnoc0,_,_=batch
         if self.channel>1 and x0.shape[1]==1:
             x0=x0.tile((1,self.channel,1,1))
-            x1=x1.tile((1,self.channel,1,1))         
+            x1=x1.tile((1,self.channel,1,1))  
+
+        dispnoc0=dispnoc0.squeeze()       
         mask = (dispnoc0 < self.maxdisp) * (dispnoc0!=self.nanvalue) # add non defined values in case where sparse disparity
         mask.detach_()
 
@@ -175,7 +208,7 @@ class ModelReg(LightningModule):
                  on_epoch=True,
                  sync_dist=True)
         
-        return test_loss.data
+        return test_loss
     def forward(self,imgL,imgR):
         #with torch.no_grad():
         disp = self.regressor(imgL,imgR)
@@ -192,7 +225,7 @@ class ModelReg(LightningModule):
         """
         self.lr = self.hparams.lr  # aliasing for Lightning auto_find_lr
         optimizer = self.hparams.optimizer(
-            params=filter(lambda p: p.requires_grad, self.parameters()),
+            params=self.parameters(),#filter(lambda p: p.requires_grad, self.parameters()),
             lr=self.lr,
         )
         if self.hparams.lr_scheduler is None:
