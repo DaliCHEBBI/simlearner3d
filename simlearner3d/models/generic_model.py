@@ -76,7 +76,7 @@ class Model(LightningModule):
 
     def training_step(self,batch, batch_idx: int):
         x0,x1,dispnoc0,Mask0,x_offset=batch        
-        MaskDef=dispnoc0!=0.0
+        MaskDef=dispnoc0>=0.0
         # ADD DIM 1
         #dispnoc0=dispnoc0.unsqueeze(1)
         # DISPNOC0 ++> DENSE DISPARITY Map 
@@ -149,7 +149,7 @@ class Model(LightningModule):
 
     def validation_step(self,batch,batch_idx: int):
         x0,x1,dispnoc0,Mask0,x_offset=batch
-        MaskDef=dispnoc0!=0.0
+        MaskDef=dispnoc0>=0.0
         # ADD DIM 1
         #dispnoc0=dispnoc0.unsqueeze(1)
         # DISPNOC0 ++> DENSE DISPARITY Map 
@@ -222,7 +222,7 @@ class Model(LightningModule):
     
     def test_step(self,batch,batch_idx: int):
         x0,x1,dispnoc0,Mask0,x_offset=batch
-        MaskDef=dispnoc0!=0.0
+        MaskDef=dispnoc0>=0.0
         # ADD DIM 1
         #dispnoc0=dispnoc0.unsqueeze(1)
         # DISPNOC0 ++> DENSE DISPARITY Map 

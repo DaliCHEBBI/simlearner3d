@@ -17,6 +17,7 @@ import tifffile
 import torch.nn.functional as F
 import numpy as np
 import time
+import copy
 
 from simlearner3d.models.generic_regression_model import ModelReg
 
@@ -25,6 +26,9 @@ sys.path.append(osp.dirname(osp.dirname(__file__)))
 from simlearner3d.utils import utils  # noqa
 
 log = utils.get_logger(__name__)
+
+
+NEURAL_NET_ARCHITECTURE_CONFIG_GROUP = "neural_net"
 
 
 @utils.eval_time
@@ -51,9 +55,15 @@ def predict(config: DictConfig) -> str:
 
     # Do not require gradient for faster predictions
     torch.set_grad_enabled(False)
-    print(" +++++++   ",config.predict.ckpt_path)
     #model = ModelReg.load_from_checkpoint(config.predict.ckpt_path)
-    model.load_trained_assets(config.predict.ckpt_path)
+    if model.load_pretrained:
+        model.load_trained_assets(config.predict.ckpt_path)
+    else:
+        kwargs_to_override = copy.deepcopy(model.hparams)
+        kwargs_to_override.pop(
+            NEURAL_NET_ARCHITECTURE_CONFIG_GROUP, None
+        )  # removes that key if it's there
+        model = ModelReg.load_from_checkpoint(config.predict.ckpt_path, **kwargs_to_override)
 
     device = utils.define_device_from_config_param(config.predict.gpus)
     model.to(device)
@@ -123,6 +133,7 @@ def predict(config: DictConfig) -> str:
         img = pred_disp
 
     os.makedirs(config.predict.output_dir, exist_ok=True)
+    tifffile.imwrite(os.path.join(config.predict.output_dir,"disparity_real.tif"), img)
 
     img = (img*config.predict.disp_scale).astype('uint16')
     
