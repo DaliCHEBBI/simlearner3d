@@ -53,13 +53,20 @@ def extract(config: DictConfig):
     kwargs_to_override.pop(
         NEURAL_NET_ARCHITECTURE_CONFIG_GROUP, None
     )  # removes that key if it's there
-    model = Model.load_from_checkpoint(config.model.ckpt_path, **kwargs_to_override)
+
+    if isinstance(model,ModelReg):
+        model = ModelReg.load_from_checkpoint(config.model.ckpt_path, **kwargs_to_override)
+    else:
+        model = Model.load_from_checkpoint(config.model.ckpt_path, **kwargs_to_override)
 
     if isinstance(model,ModelReg):
 
        savefilename =config.model.ckpt_path.replace('.ckpt','_psmnet.tar')
+       _to_save_state_dict=model.regressor.state_dict()
+       state_dict_new={k.replace("regressor.","module."):v for k,v in zip(_to_save_state_dict.keys(),_to_save_state_dict.values())}
+
        torch.save({
-		    'state_dict': model.regressor.state_dict(),
+		    'state_dict': state_dict_new,
 		}, savefilename)
        print("Model PSMNet state_dict has been saved to :   ",savefilename)
     else:

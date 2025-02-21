@@ -32,13 +32,21 @@ def find_file_in_dir(data_dir: str, basename: str) -> str:
 def read_images_and_create_full_data_obj(
         image_paths,
 ):
+
+    #_disp=tf.imread(image_paths[2])
+    #_masq=tf.imread(image_paths[3])
+    #print(np.max(_disp),np.min(_disp))
+    #print(np.max(_masq),np.min(_masq))
+    #if np.count_nonzero(((_disp>0)*(_masq!=0)))==0:
+    #    print(image_paths[2])
+
+    
     return Data(
         _left=tf.imread(image_paths[0]),
         _right=tf.imread(image_paths[1]),
         _disp=tf.imread(image_paths[2]),
         _masq=tf.imread(image_paths[3]),
     )
-
 
 def get_image_paths_by_split_dict(
     data_dir: str, split_csv_path: str

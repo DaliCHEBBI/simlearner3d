@@ -77,7 +77,7 @@ class ModelReg(LightningModule):
             x1=x1.tile((1,self.channel,1,1))  
 
         dispnoc0=dispnoc0.squeeze()
-        mask = (dispnoc0 < self.maxdisp) * (dispnoc0 != self.nanvalue) # add non defined values in case where sparse disparity
+        mask = (dispnoc0 < self.maxdisp) * (dispnoc0 >= self.nanvalue) # add non defined values in case where sparse disparity
         mask.detach_()
 
         if self.model == 'stackhourglass':
@@ -143,7 +143,7 @@ class ModelReg(LightningModule):
         
         dispnoc0=dispnoc0.squeeze()
         #device='cuda' if x0.is_cuda else 'cpu'
-        mask = (dispnoc0 < self.maxdisp) * (dispnoc0!=self.nanvalue) # add non defined values in case where sparse disparity
+        mask = (dispnoc0 < self.maxdisp) * (dispnoc0 >= self.nanvalue) # add non defined values in case where sparse disparity
         mask.detach_()
 
         print(mask.shape)
@@ -169,7 +169,7 @@ class ModelReg(LightningModule):
             x1=x1.tile((1,self.channel,1,1))  
 
         dispnoc0=dispnoc0.squeeze()       
-        mask = (dispnoc0 < self.maxdisp) * (dispnoc0!=self.nanvalue) # add non defined values in case where sparse disparity
+        mask = (dispnoc0 < self.maxdisp) * (dispnoc0 >= self.nanvalue) # add non defined values in case where sparse disparity
         mask.detach_()
 
         if x0.shape[2] % 16 != 0:

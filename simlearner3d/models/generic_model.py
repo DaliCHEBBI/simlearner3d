@@ -63,6 +63,7 @@ class Model(LightningModule):
         self.false2=kwargs.get("false2")
         #self.inplanes = kwargs.get("in_planes")
         self.learning_rate=kwargs.get("learning_rate")
+        self.load_pretrained=kwargs.get("load_pretrained")
         self.mode=DEFAULT_MODE
         if kwargs.get("mode"):
             self.mode=kwargs.get("mode")
@@ -73,6 +74,18 @@ class Model(LightningModule):
         #self.feature=MSNet(self.inplanes)
         if self.mode=="feature+decision":
             self.decisionNet=DecisionNetwork(2*64)
+
+    def load_trained_assets(self, model_tar : str):
+        #device="cuda"
+        state_dict = torch.load(model_tar)['state_dict'] # ,map_location=device
+        if self.mode=="feature":
+            state_dict_feature={k.replace("feature.",""):v for k,v in zip(state_dict.keys(),state_dict.values()) if k.startswith('feature')}
+            self.feature.load_state_dict(state_dict_feature)
+        else:
+            state_dict_feature={k.replace("feature.",""):v for k,v in zip(state_dict.keys(),state_dict.values()) if k.startswith('feature')}
+            state_dict_decision={k.replace("decisionNet.",""):v for k,v in zip(state_dict.keys(),state_dict.values()) if k.startswith('decisionNet')}
+            self.feature.load_state_dict(state_dict_feature)
+            self.decisionNet.load_state_dict(state_dict_decision)
 
     def training_step(self,batch, batch_idx: int):
         x0,x1,dispnoc0,Mask0,x_offset=batch        

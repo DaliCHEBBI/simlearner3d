@@ -25,9 +25,12 @@ class ClipAndComputeUsingPatchSize:
     def clip_sample(self, data: Data):
         """ use random clipping taken disparity constraints into account"""
         #import tifffile as tf 
-        _notocc=(data._disp>=0.0)*data._masq
-        _mean_disparity=int(torch.mean(_notocc[_notocc!=0.0]))
+        _notocc=data._disp[(data._disp>=0.0)*(data._masq!=0)]
+        #print("noccc    " ,_notocc)
+        _mean_disparity=int(torch.mean(_notocc))    
+        print("mean disparity  ", _mean_disparity)
         #print("mean disparity ",np.mean(_notocc[_notocc!=0.0].detach().numpy()))
+
         x_upl=_mean_disparity+secrets.randbelow(self.tile_height-self.patch_size-_mean_disparity)
         y_upl=secrets.randbelow(self.tile_height-self.patch_size)
         # return a new data object 
@@ -67,8 +70,8 @@ class ClipAndComputeUsingPatchSizeRegression:
     def clip_sample(self, data: Data):
         """ use random clipping taken disparity constraints into account"""
         #import tifffile as tf 
-        _notocc=(data._disp>=0.0)*data._masq
-        _mean_disparity=int(torch.mean(_notocc[_notocc!=0.0]))
+        _notocc=data._disp[(data._disp>=0.0)*(data._masq!=0)]
+        _mean_disparity=int(torch.mean(_notocc))    
         #print("mean disparity ",np.mean(_notocc[_notocc!=0.0].detach().numpy()))
         x_upl=_mean_disparity+secrets.randbelow(self.tile_height-self.patch_size-_mean_disparity)
         y_upl=secrets.randbelow(self.tile_height-self.patch_size)

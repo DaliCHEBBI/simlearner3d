@@ -62,16 +62,15 @@ class StandardizeIntensityCenterOnZero:
         return res_data
     
 
-
-
-
 def normalize_radiometry(channel_data: torch.Tensor):
     max_value_t=torch.amax(channel_data) # assuming bs,3(channels),H,W
     min_value_t=torch.amin(channel_data)
     res_data=(channel_data.sub(min_value_t)).div(max_value_t-min_value_t+1e-8)
     #print(res_data.max(),res_data.min())
+    
     assert(torch.all(res_data<=1) and torch.all(res_data>=0))
     return (res_data - __dataset_one_channel_stats['mean'])/__dataset_one_channel_stats['std']
+
 
 
 """def scale_crop(normalize=__imagenet_one_channel_stats):
