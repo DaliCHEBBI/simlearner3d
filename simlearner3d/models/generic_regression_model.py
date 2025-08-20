@@ -66,15 +66,15 @@ class ModelReg(LightningModule):
 
     def load_trained_assets(self, model_tar : str):
         #device="cuda"
-        state_dict = torch.load(model_tar)['state_dict'] # ,map_location=device
+        state_dict = torch.load(model_tar,map_location="cpu")['state_dict'] # ,map_location=device
         state_dict_new={k.replace("module.",""):v for k,v in zip(state_dict.keys(),state_dict.values())}
         self.regressor.load_state_dict(state_dict_new)
 
     def training_step(self,batch, batch_idx: int):
         x0,x1,dispnoc0,_,_=batch
-        if self.channel>1 and x0.shape[1]==1:
+        """if self.channel>1 and x0.shape[1]==1:
             x0=x0.tile((1,self.channel,1,1))
-            x1=x1.tile((1,self.channel,1,1))  
+            x1=x1.tile((1,self.channel,1,1)) """ 
 
         dispnoc0=dispnoc0.squeeze()
         mask = (dispnoc0 < self.maxdisp) * (dispnoc0 >= self.nanvalue) # add non defined values in case where sparse disparity
@@ -137,9 +137,9 @@ class ModelReg(LightningModule):
 
     def validation_step(self,batch,batch_idx: int):
         x0,x1,dispnoc0,_,_=batch
-        if self.channel>1 and x0.shape[1]==1:
+        """if self.channel>1 and x0.shape[1]==1:
             x0=x0.tile((1,self.channel,1,1))
-            x1=x1.tile((1,self.channel,1,1))
+            x1=x1.tile((1,self.channel,1,1))"""
         
         dispnoc0=dispnoc0.squeeze()
         #device='cuda' if x0.is_cuda else 'cpu'
@@ -164,9 +164,9 @@ class ModelReg(LightningModule):
     
     def test_step(self,batch,batch_idx: int):
         x0,x1,dispnoc0,_,_=batch
-        if self.channel>1 and x0.shape[1]==1:
+        """if self.channel>1 and x0.shape[1]==1:
             x0=x0.tile((1,self.channel,1,1))
-            x1=x1.tile((1,self.channel,1,1))  
+            x1=x1.tile((1,self.channel,1,1)) """
 
         dispnoc0=dispnoc0.squeeze()       
         mask = (dispnoc0 < self.maxdisp) * (dispnoc0 >= self.nanvalue) # add non defined values in case where sparse disparity

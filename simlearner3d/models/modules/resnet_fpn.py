@@ -57,7 +57,12 @@ class ResNetFPN_8_1(nn.Module):
         self.in_planes = initial_dim
 
         # Networks
-        self.conv1 = nn.Conv2d(1, initial_dim, kernel_size=7, stride=2, padding=3, bias=False)
+        self.conv1 = nn.Conv2d(1, 
+                               initial_dim, 
+                               kernel_size=7, 
+                               stride=2, 
+                               padding=3, 
+                               bias=False)
         self.bn1 = nn.BatchNorm2d(initial_dim)
         self.relu = nn.ReLU(inplace=True)
 
@@ -82,13 +87,13 @@ class ResNetFPN_8_1(nn.Module):
             conv3x3(block_dims[1], block_dims[0]),
         )
 
-        """self.layer0_outconv = conv1x1(block_dims[0], initial_dim)
+        self.layer0_outconv = conv1x1(block_dims[0], initial_dim)
         self.layer0_outconv1 = nn.Sequential(
             conv3x3(block_dims[0], block_dims[0]),
             nn.BatchNorm2d(block_dims[0]),
             nn.LeakyReLU(),
             conv3x3(block_dims[0], initial_dim),
-        )"""
+        )
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -115,20 +120,29 @@ class ResNetFPN_8_1(nn.Module):
         # FPN
         x3_out = self.layer3_outconv(x3)
 
-        x3_out_2x = F.interpolate(x3_out, scale_factor=2., mode='bilinear', align_corners=True) # res 4
+        x3_out_2x = F.interpolate(x3_out, 
+                                  scale_factor=2., 
+                                  mode='bilinear', 
+                                  align_corners=True) # res 4
         x2_out = self.layer2_outconv(x2)
         x2_out = self.layer2_outconv2(x2_out+x3_out_2x)
 
-        x2_out_2x = F.interpolate(x2_out, scale_factor=2., mode='bilinear', align_corners=True) # res 2
+        x2_out_2x = F.interpolate(x2_out, 
+                                  scale_factor=2., 
+                                  mode='bilinear', 
+                                  align_corners=True) # res 2
         x1_out = self.layer1_outconv(x1)
         x1_out = self.layer1_outconv2(x1_out+x2_out_2x)
 
-        x1_out_1x = F.interpolate(x1_out, scale_factor=2., mode='bilinear', align_corners=True) # res 1
+        x1_out_1x = F.interpolate(x1_out, 
+                                  scale_factor=2., 
+                                  mode='bilinear', 
+                                  align_corners=True) # res 1
 
-        #x0_out=self.layer0_outconv(x0)
-        #x0_out= self.layer0_outconv1(x0_out+x1_out_1x)
+        x0_out=self.layer0_outconv(x0)
+        x0_out= self.layer0_outconv1(x0_out+x1_out_1x)
 
-        return x1_out_1x
+        return x0_out
 
 
 
@@ -174,13 +188,13 @@ class ResNetFPN_8_1_Inference(nn.Module):
             conv3x3(block_dims[1], block_dims[0]),
         )
 
-        """self.layer0_outconv = conv1x1(block_dims[0], initial_dim)
+        self.layer0_outconv = conv1x1(block_dims[0], initial_dim)
         self.layer0_outconv1 = nn.Sequential(
             conv3x3(block_dims[0], block_dims[0]),
             nn.BatchNorm2d(block_dims[0]),
             nn.LeakyReLU(),
             conv3x3(block_dims[0], initial_dim),
-        )"""
+        )
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -220,27 +234,36 @@ class ResNetFPN_8_1_Inference(nn.Module):
         # FPN
         x3_out = self.layer3_outconv(x3)
 
-        x3_out_2x = F.interpolate(x3_out, scale_factor=2., mode='bilinear', align_corners=True) # res 4
+        x3_out_2x = F.interpolate(x3_out, 
+                                  scale_factor=2., 
+                                  mode='bilinear',
+                                    align_corners=True) # res 4
         x2_out = self.layer2_outconv(x2)
         x2_out = self.layer2_outconv2(x2_out+x3_out_2x)
 
-        x2_out_2x = F.interpolate(x2_out, scale_factor=2., mode='bilinear', align_corners=True) # res 2
+        x2_out_2x = F.interpolate(x2_out,
+                                   scale_factor=2., 
+                                   mode='bilinear', 
+                                   align_corners=True) # res 2
         x1_out = self.layer1_outconv(x1)
         x1_out = self.layer1_outconv2(x1_out+x2_out_2x)
 
-        x1_out_1x = F.interpolate(x1_out, scale_factor=2., mode='bilinear', align_corners=True) # res 1
+        x1_out_1x = F.interpolate(x1_out, 
+                                  scale_factor=2., 
+                                  mode='bilinear', 
+                                  align_corners=True) # res 1
 
-        #x0_out=self.layer0_outconv(x0)
-        #x0_out= self.layer0_outconv1(x0_out+x1_out_1x)
+        x0_out=self.layer0_outconv(x0)
+        x0_out= self.layer0_outconv1(x0_out+x1_out_1x)
 
         if top_pad !=0 and right_pad != 0:
-            out = x1_out_1x[:,:,top_pad:,:-right_pad]
+            out = x0_out[:,:,top_pad:,:-right_pad]
         elif top_pad ==0 and right_pad != 0:
-            out = x1_out_1x[:,:,:,:-right_pad]
+            out = x0_out[:,:,:,:-right_pad]
         elif top_pad !=0 and right_pad == 0:
-            out = x1_out_1x[:,:,top_pad:,:]
+            out = x0_out[:,:,top_pad:,:]
         else:
-            out = x1_out_1x
+            out = x0_out
         return out
 
 

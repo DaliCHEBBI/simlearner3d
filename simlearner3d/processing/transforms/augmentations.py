@@ -47,10 +47,10 @@ class ClipAndComputeUsingPatchSize:
         """
               
         return Data(
-            _left=data._left[y_upl:y_upl+self.patch_size,x_upl:x_upl+self.patch_size],
-            _right=data._right[y_upl:y_upl+self.patch_size,:],
-            _disp=data._disp[y_upl:y_upl+self.patch_size,x_upl:x_upl+self.patch_size],
-            _masq=data._masq[y_upl:y_upl+self.patch_size,x_upl:x_upl+self.patch_size],
+            _left=data._left[...,y_upl:y_upl+self.patch_size,x_upl:x_upl+self.patch_size],
+            _right=data._right[...,y_upl:y_upl+self.patch_size,:],
+            _disp=data._disp[...,y_upl:y_upl+self.patch_size,x_upl:x_upl+self.patch_size],
+            _masq=data._masq[...,y_upl:y_upl+self.patch_size,x_upl:x_upl+self.patch_size],
             _xupl=x_upl,
         )
 
@@ -89,10 +89,10 @@ class ClipAndComputeUsingPatchSizeRegression:
         
               
         return Data(
-            _left=data._left[y_upl:y_upl+self.patch_size,x_upl:x_upl+self.patch_size],
-            _right=data._right[y_upl:y_upl+self.patch_size,x_upl:x_upl+self.patch_size],
-            _disp=data._disp[y_upl:y_upl+self.patch_size,x_upl:x_upl+self.patch_size],
-            _masq=data._masq[y_upl:y_upl+self.patch_size,x_upl:x_upl+self.patch_size],
+            _left=data._left[...,y_upl:y_upl+self.patch_size,x_upl:x_upl+self.patch_size],
+            _right=data._right[...,y_upl:y_upl+self.patch_size,x_upl:x_upl+self.patch_size],
+            _disp=data._disp[...,y_upl:y_upl+self.patch_size,x_upl:x_upl+self.patch_size],
+            _masq=data._masq[...,y_upl:y_upl+self.patch_size,x_upl:x_upl+self.patch_size],
             _xupl=x_upl,
         )
 
@@ -107,12 +107,20 @@ class DownScaleImage:
     
     def apply_scale(self,data: Data,scale_factor):
         import torch.nn.functional as F
-        _left_down=F.interpolate(data._left.unsqueeze(0).unsqueeze(0),
-                        scale_factor=scale_factor,
-                        mode='bilinear')
-        _right_down=F.interpolate(data._right.unsqueeze(0).unsqueeze(0),
-                        scale_factor=scale_factor,
-                        mode='bilinear')
+        if data._left.ndim==2:
+            _left_down=F.interpolate(data._left.unsqueeze(0).unsqueeze(0),
+                            scale_factor=scale_factor,
+                            mode='bilinear')
+            _right_down=F.interpolate(data._right.unsqueeze(0).unsqueeze(0),
+                            scale_factor=scale_factor,
+                            mode='bilinear')
+        else:
+            _left_down=F.interpolate(data._left.unsqueeze(0),
+                            scale_factor=scale_factor,
+                            mode='bilinear')
+            _right_down=F.interpolate(data._right.unsqueeze(0),
+                            scale_factor=scale_factor,
+                            mode='bilinear') 
         
         return Data(
             _left=F.interpolate(_left_down, 

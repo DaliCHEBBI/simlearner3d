@@ -1,11 +1,11 @@
 defaults:
-  - default.yaml
-
+  - genericnuplet.yaml
+  - override criterion: MaskedNUpletLoss.yaml
 lr: 0.001  
 
 neural_net_class_name: "ResNetFPN_8_1"
 neural_net_hparams:
-  INITIAL_DIM: 128
+  INITIAL_DIM: 64
   BLOC_DIMS: [128,196,256]
 
 mode: "feature"

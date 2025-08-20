@@ -1,0 +1,25 @@
+_target_: simlearner3d.models.generic_model_n_uplet.Model
+
+# Architecture defined in sub-configs
+ckpt_path: null  # str, for resuming training and finetuning.
+neural_net_class_name: "MSNet"
+neural_net_hparams: ???
+
+# Interpolation params
+#interpolation_k: ${predict.interpolator.interpolation_k}  # interpolation at eval time
+#num_workers: 4  # for knn_interpolate
+
+## Optimization
+momentum: 0.9  # arbitrary
+monitor: "val_loss"
+
+false1: 1
+false2: 4
+learning_rate: 0.001
+load_pretrained: false
+
+
+defaults:
+  - optimizer: Adam.yaml
+  - lr_scheduler: ReduceLROnPlateau.yaml
+  - criterion: MaskedNUpletLoss.yaml

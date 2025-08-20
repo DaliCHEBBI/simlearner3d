@@ -1,2 +1,3 @@
 StandardizeIntensityUsingDatasetStatistics:
   _target_: simlearner3d.processing.transforms.transforms.StandardizeIntensityUsingDatasetStatistics
+  nb_channel: ${model.channel}

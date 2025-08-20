@@ -171,13 +171,18 @@ def train(config: DictConfig) -> Trainer:
 
         if isinstance(model,ModelReg) and model.load_pretrained==True:
             model.load_trained_assets(config.model.ckpt_path)
+            model.regressor.freeze_bn()
         elif isinstance(model,ModelReg):
             model = ModelReg.load_from_checkpoint(config.model.ckpt_path, **kwargs_to_override)
+            model.regressor.freeze_bn()
         else:
             if model.load_pretrained==True:
                 model.load_trained_assets(config.model.ckpt_path)
             else:
                 model = Model.load_from_checkpoint(config.model.ckpt_path, **kwargs_to_override)
+            model.feature.freeze_bn()
+            if model.mode=="feature+decision":
+                model.decisionNet.freeze_bn()
         trainer.fit(model=model, datamodule=datamodule, ckpt_path=None)
         log.info(f"Best checkpoint:\n{trainer.checkpoint_callback.best_model_path}")
         log.info("End of training and validating!")

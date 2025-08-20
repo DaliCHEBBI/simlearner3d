@@ -18,7 +18,18 @@ class MaskedTripletLoss:
                                  negative,
                                  occlusion_masq
                                     )
+    
+class NPairLoss:
+    def __init__(self, margin =0.3):
+        self.margin= margin 
+    def __call__(self, matching, non_matching, occlusion_masq) -> torch.Tensor:
+        return torch.clamp_min(non_matching - matching + self.margin,0)
         
+class NMaskedPairLoss:
+    def __init__(self, margin =0.3):
+        self.margin= margin 
+    def __call__(self, matching, non_matching, masq) -> torch.Tensor:
+        return torch.clamp_min(non_matching - matching + self.margin,0).mul(masq)   
 
 class SimpleTripletLoss:
     def __init__(self,margin=0.3):

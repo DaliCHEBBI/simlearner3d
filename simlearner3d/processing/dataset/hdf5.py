@@ -105,7 +105,10 @@ class HDF5Dataset(Dataset):
             transform = self.eval_transform
         if transform:
             data = transform(data)
-        return data._left.unsqueeze(0), data._right.unsqueeze(0),data._disp.unsqueeze(0),data._masq.unsqueeze(0),data._xupl
+        if data._left.ndim==2:
+            return data._left.unsqueeze(0), data._right.unsqueeze(0),data._disp.unsqueeze(0),data._masq.unsqueeze(0),data._xupl
+        else:
+            return data._left, data._right,data._disp.unsqueeze(0),data._masq.unsqueeze(0),data._xupl
         #----------------------------------------------------------------------------#
 
 
