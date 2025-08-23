@@ -202,8 +202,8 @@ class Data:
         return self
     
 
-def coords_grid(batch, ht, wd):
-    coords = torch.meshgrid(torch.arange(ht), torch.arange(wd))
+def coords_grid(batch, ht, wd, device):
+    coords = torch.meshgrid(torch.arange(ht), torch.arange(wd), device=device)
     coords = torch.stack(coords[::-1], dim=0).float()
     return coords[None].repeat(batch, 1, 1, 1)
 

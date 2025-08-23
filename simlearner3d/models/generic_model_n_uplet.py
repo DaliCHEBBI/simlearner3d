@@ -104,7 +104,7 @@ class Model(LightningModule):
 
         left,right, disp, masq_occ,_ = batch
         masq_defined= (disp != NODATA)
-
+        device='cuda' if left.is_cuda else 'cpu'
         #images = (2 * (images / 255.0) - 1.0).contiguous()
 
         fmap1 = self.feature(left)
@@ -116,7 +116,7 @@ class Model(LightningModule):
         B,D,H1,W1  = fmap1.shape
         _,_,_, W2  = fmap2.shape
 
-        coords = coords_grid(B,H1,W1) # B,2,H1,W1 
+        coords = coords_grid(B,H1,W1,device) # B,2,H1,W1 
 
         xgrid0, ygrid = coords.split([1,1], dim=1)
 
@@ -169,7 +169,7 @@ class Model(LightningModule):
     def validation_step(self,batch,batch_idx: int):
         left,right, disp, masq_occ,_ = batch
         masq_defined= (disp != NODATA)
-
+        device='cuda' if left.is_cuda else 'cpu'
         #images = (2 * (images / 255.0) - 1.0).contiguous()
 
         fmap1 = self.feature(left)
@@ -181,7 +181,7 @@ class Model(LightningModule):
         B,D,H1,W1  = fmap1.shape
         _,_,_, W2  = fmap2.shape
 
-        coords = coords_grid(B,H1,W1) # B,2,H1,W1 
+        coords = coords_grid(B,H1,W1,device) # B,2,H1,W1 
 
         xgrid0, ygrid = coords.split([1,1], dim=1)
 
@@ -234,7 +234,7 @@ class Model(LightningModule):
     def test_step(self,batch,batch_idx: int):
         left,right, disp, masq_occ,_ = batch
         masq_defined= (disp != NODATA)
-
+        device='cuda' if left.is_cuda else 'cpu'
         #images = (2 * (images / 255.0) - 1.0).contiguous()
 
         fmap1 = self.feature(left)
@@ -246,7 +246,7 @@ class Model(LightningModule):
         B,D,H1,W1  = fmap1.shape
         _,_,_, W2  = fmap2.shape
 
-        coords = coords_grid(B,H1,W1) # B,2,H1,W1 
+        coords = coords_grid(B,H1,W1,device) # B,2,H1,W1 
 
 
         xgrid0, ygrid = coords.split([1,1], dim=1)
