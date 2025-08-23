@@ -1,5 +1,6 @@
 import torch.nn as nn
 import torch.nn.functional as F
+import segmentation_models_pytorch as smp
 
 
 def conv1x1(in_planes, out_planes, stride=1):
@@ -140,10 +141,65 @@ class ResNetFPN_8_1(nn.Module):
                                   align_corners=True) # res 1
 
         x0_out=self.layer0_outconv(x0)
+
+        x0_out = F.interpolate(x0_out, 
+                                  scale_factor=2., 
+                                  mode='bilinear', 
+                                  align_corners=True) # res 1
+        
         x0_out= self.layer0_outconv1(x0_out+x1_out_1x)
 
         return x0_out
 
+
+
+class ResNet34Encoder_FPNDecoder (nn.Module):
+    def __init__(self,INITIAL_DIM):
+        self.out_dim= INITIAL_DIM
+        super(ResNet34Encoder_FPNDecoder, self).__init__()
+        self.model= smp.FPN(encoder_name='resnet34', 
+                            in_channels=1, 
+                            decoder_segmentation_channels=self.out_dim,
+                            classes=self.out_dim)
+        
+    def forward(self,x):
+        return self.model(x)
+    
+
+class ResNet34Encoder_FPNDecoder_Inference (nn.Module):
+    def __init__(self, INITIAL_DIM):
+        self.out_dim= INITIAL_DIM
+        super(ResNet34Encoder_FPNDecoder_Inference, self).__init__()
+        self.model= smp.FPN(encoder_name='resnet34', 
+                            in_channels=1, 
+                            decoder_segmentation_channels=self.out_dim,
+                            classes=self.out_dim)
+        
+    def forward(self,x):
+        if x.size()[-2] % 16 != 0:
+            times = x.size()[-2]//16   
+            top_pad = (times+1)*16 - x.size()[-2]
+        else:
+            top_pad = 0
+        if x.size()[-1] % 16 != 0:
+            times = x.size()[-1]//16
+            right_pad = (times+1)*16-x.size()[-1] 
+        else:
+            right_pad = 0    
+
+        x = F.pad(x,(0,right_pad, top_pad,0))
+
+        x0_out= self.model(x)
+
+        if top_pad !=0 and right_pad != 0:
+            out = x0_out[:,:,top_pad:,:-right_pad]
+        elif top_pad ==0 and right_pad != 0:
+            out = x0_out[:,:,:,:-right_pad]
+        elif top_pad !=0 and right_pad == 0:
+            out = x0_out[:,:,top_pad:,:]
+        else:
+            out = x0_out
+        return out
 
 
 class ResNetFPN_8_1_Inference(nn.Module):
@@ -254,6 +310,12 @@ class ResNetFPN_8_1_Inference(nn.Module):
                                   align_corners=True) # res 1
 
         x0_out=self.layer0_outconv(x0)
+
+        x0_out = F.interpolate(x0_out, 
+                                  scale_factor=2., 
+                                  mode='bilinear', 
+                                  align_corners=True) # res 1
+        
         x0_out= self.layer0_outconv1(x0_out+x1_out_1x)
 
         if top_pad !=0 and right_pad != 0:

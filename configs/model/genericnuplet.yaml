@@ -2,7 +2,7 @@ _target_: simlearner3d.models.generic_model_n_uplet.Model
 
 # Architecture defined in sub-configs
 ckpt_path: null  # str, for resuming training and finetuning.
-neural_net_class_name: "MSNet"
+neural_net_class_name: "ResNetFPN_8_1"
 neural_net_hparams: ???
 
 # Interpolation params

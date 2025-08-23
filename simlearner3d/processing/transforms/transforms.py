@@ -58,7 +58,8 @@ class StandardizeIntensityCenterOnZero:
         return data
 
     def standardize_channel(self, channel_data: torch.Tensor, min_channel=0.0,max_channel=255.0):
-        res_data=((channel_data.sub(min_channel)).div(max_channel-min_channel)).sub(0.5)
+        #res_data=((channel_data.sub(min_channel)).div(max_channel-min_channel)).sub(0.5)
+        res_data = (2 * (channel_data / 255.0) - 1.0).contiguous()
         return res_data
     
 

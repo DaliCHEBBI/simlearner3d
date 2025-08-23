@@ -106,9 +106,14 @@ class HDF5Dataset(Dataset):
         if transform:
             data = transform(data)
         if data._left.ndim==2:
-            return data._left.unsqueeze(0), data._right.unsqueeze(0),data._disp.unsqueeze(0),data._masq.unsqueeze(0),data._xupl
-        else:
-            return data._left, data._right,data._disp.unsqueeze(0),data._masq.unsqueeze(0),data._xupl
+            data._left=data._left.unsqueeze(0)
+        if data._right.ndim==2:
+            data._right=data._right.unsqueeze(0)
+        if data._disp.ndim==2:
+            data._disp=data._disp.unsqueeze(0)
+        if data._masq.ndim==2:    
+            data._masq=data._masq.unsqueeze(0)
+        return data._left, data._right,data._disp,data._masq,data._xupl
         #----------------------------------------------------------------------------#
 
 

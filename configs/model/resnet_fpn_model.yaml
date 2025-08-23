@@ -3,9 +3,9 @@ defaults:
   - override criterion: MaskedNUpletLoss.yaml
 lr: 0.001  
 
-neural_net_class_name: "ResNetFPN_8_1"
+neural_net_class_name: "ResNet34Encoder_FPNDecoder"
 neural_net_hparams:
   INITIAL_DIM: 64
-  BLOC_DIMS: [128,196,256]
+  #BLOC_DIMS: [64,128,256,512]
 
 mode: "feature"
