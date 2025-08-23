@@ -202,10 +202,10 @@ class Data:
         return self
     
 
-def coords_grid(batch, ht, wd, device):
-    coords = torch.meshgrid(torch.arange(ht), torch.arange(wd), device=device)
+def coords_grid(batch, ht, wd, DEVICE):
+    coords = torch.meshgrid(torch.arange(ht), torch.arange(wd))
     coords = torch.stack(coords[::-1], dim=0).float()
-    return coords[None].repeat(batch, 1, 1, 1)
+    return coords[None].repeat(batch, 1, 1, 1).to(DEVICE)
 
 def get_grid_coords_2d(y, x, coord_dim=-1):
     y, x = torch.meshgrid(y, x)
