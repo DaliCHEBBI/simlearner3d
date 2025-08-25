@@ -176,14 +176,14 @@ class ResNet34Encoder_FPNDecoder_Inference (nn.Module):
                             classes=self.out_dim)
         
     def forward(self,x):
-        if x.size()[-2] % 16 != 0:
-            times = x.size()[-2]//16   
-            top_pad = (times+1)*16 - x.size()[-2]
+        if x.size()[-2] % 32 != 0:
+            times = x.size()[-2]//32   
+            top_pad = (times+1)*32 - x.size()[-2]
         else:
             top_pad = 0
-        if x.size()[-1] % 16 != 0:
-            times = x.size()[-1]//16
-            right_pad = (times+1)*16-x.size()[-1] 
+        if x.size()[-1] % 32 != 0:
+            times = x.size()[-1]//32
+            right_pad = (times+1)*32-x.size()[-1] 
         else:
             right_pad = 0    
 
