@@ -8,11 +8,11 @@ from pytorch_lightning import (
 import torch
 from torch import nn
 
-from simlearner3d.models.generic_model import Model
+from simlearner3d.models.generic_model_n_uplet import Model
 from simlearner3d.models.generic_regression_model import ModelReg
 
 from simlearner3d.models.modules.msaff import MSNet,MSNETInferenceGatedAttention
-from simlearner3d.models.modules.resnet_fpn import ResNetFPN_8_1,ResNetFPN_8_1_Inference
+from simlearner3d.models.modules.resnet_fpn import ResNetFPN_8_1,ResNetFPN_8_1_Inference, ResNet34Encoder_FPNDecoder, ResNet34Encoder_FPNDecoder_Inference
 from simlearner3d.models.modules.unet import UNet,UNetInference
 from simlearner3d.models.modules.unetgatedattention import UNetGatedAttention, UNetInferenceGatedAttention
 from simlearner3d.models.modules.decision_net import DecisionNetworkOnCube
@@ -22,8 +22,8 @@ log = utils.get_logger(__name__)
 
 NEURAL_NET_ARCHITECTURE_CONFIG_GROUP = "neural_net"
 
-MODEL_ZOO = [ResNetFPN_8_1,MSNet,UNet,UNetGatedAttention]
-MODEL_INFERENCE_ZOO=[ResNetFPN_8_1_Inference,MSNETInferenceGatedAttention,UNetInference,UNetInferenceGatedAttention]
+MODEL_ZOO = [ResNet34Encoder_FPNDecoder,ResNetFPN_8_1,MSNet,UNet,UNetGatedAttention]
+MODEL_INFERENCE_ZOO=[ResNet34Encoder_FPNDecoder_Inference, ResNetFPN_8_1_Inference,MSNETInferenceGatedAttention,UNetInference,UNetInferenceGatedAttention]
 
 
 def get_inference_neural_net_class(class_training: nn.Module) -> nn.Module:
