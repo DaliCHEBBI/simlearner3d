@@ -152,7 +152,6 @@ class Model(LightningModule):
         corr_matching = corr_matching.unsqueeze(-1).repeat(1,1,1,W2)
 
         training_loss = self.criterion(corr_matching,all_corr,mask_non_matching & masq_defined)
-        print("max ",torch.max(training_loss),torch.min(training_loss))
         training_loss= training_loss.sum().div(training_loss.count_nonzero())
 
         self.log("training_loss",
