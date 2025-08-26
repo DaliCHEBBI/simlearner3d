@@ -152,7 +152,8 @@ class Model(LightningModule):
         corr_matching = corr_matching.unsqueeze(-1).repeat(1,1,1,W2)
 
         training_loss = self.criterion(corr_matching,all_corr,mask_non_matching & masq_defined)
-        training_loss= training_loss.sum()
+        print("max ",torch.max(training_loss),torch.min(training_loss))
+        training_loss= training_loss.sum().div(training_loss.count_nonzero())
 
         self.log("training_loss",
                  training_loss, 
@@ -215,7 +216,7 @@ class Model(LightningModule):
         corr_matching = corr_matching.unsqueeze(-1).repeat(1,1,1,W2)
 
         validation_loss = self.criterion(corr_matching,all_corr,mask_non_matching & masq_defined)
-        validation_loss= validation_loss.sum()
+        validation_loss= validation_loss.sum().div(validation_loss.count_nonzero())
 
         self.log("val_loss",
                  validation_loss, 
@@ -281,7 +282,7 @@ class Model(LightningModule):
 
         test_loss = self.criterion(corr_matching,all_corr,mask_non_matching & masq_defined)
 
-        test_loss= test_loss.sum()
+        test_loss= test_loss.sum().div(test_loss.count_nonzero())
 
         self.log("test_loss",
                  test_loss, 

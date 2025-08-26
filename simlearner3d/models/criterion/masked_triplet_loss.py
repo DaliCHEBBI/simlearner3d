@@ -29,7 +29,7 @@ class NMaskedPairLoss:
     def __init__(self, margin =0.3):
         self.margin= margin 
     def __call__(self, matching, non_matching, masq) -> torch.Tensor:
-        return torch.clamp_min(non_matching - matching + self.margin,0).mul(masq)
+        return torch.clamp_min(non_matching - matching + self.margin,0).mul(masq.float())
 
 class SimpleTripletLoss:
     def __init__(self,margin=0.3):
