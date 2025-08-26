@@ -97,7 +97,6 @@ class Model(LightningModule):
         fmap1 = fmap1.view(B, D, H, W1)
         fmap2 = fmap2.view(B, D, H, W2)
         corr = torch.einsum('aijk,aijh->ajkh', fmap1, fmap2)
-        #corr = corr.reshape(B, H, W1, 1, W2).contiguous()
         return corr #/ torch.sqrt(torch.tensor(D).float())
 
     def training_step (self, batch, batch_idx: int):
@@ -129,7 +128,7 @@ class Model(LightningModule):
         grid = torch.cat([xgrido,ygrido], dim=1).permute(0,2,3,1) # B,H1,W1, 2
         # compute features at coordinates
         f_map2_pos = F.grid_sample(fmap2, grid, align_corners=True)
-
+        f_map2_pos = F.normalize(f_map2_pos,p=2.0, dim=1)
         # compute all pairs cosine similarities 
         # B,H,W1,W2
         all_corr = Model.corr(fmap1,fmap2)
@@ -152,11 +151,9 @@ class Model(LightningModule):
         mask_non_matching.scatter_(3,x_lower_bound,0)
         corr_matching = corr_matching.unsqueeze(-1).repeat(1,1,1,W2)
 
-        training_loss = self.criterion(corr_matching,all_corr,mask_non_matching)
+        training_loss = self.criterion(corr_matching,all_corr,mask_non_matching & masq_defined)
+        training_loss= training_loss.sum()
 
-        training_loss= training_loss.sum().div( 
-            torch.logical_and(mask_non_matching, masq_defined).count_nonzero() 
-                                            + 1e-12)
         self.log("training_loss",
                  training_loss, 
                  prog_bar=True,
@@ -194,7 +191,7 @@ class Model(LightningModule):
         grid = torch.cat([xgrido,ygrido], dim=1).permute(0,2,3,1) # B,H1,W1, 2
         # compute features at coordinates
         f_map2_pos = F.grid_sample(fmap2, grid, align_corners=True)
-
+        f_map2_pos = F.normalize(f_map2_pos,p=2.0, dim=1)
         # compute all pairs cosine similarities 
         # B,H,W1,W2
         all_corr = Model.corr(fmap1,fmap2)
@@ -217,11 +214,9 @@ class Model(LightningModule):
         mask_non_matching.scatter_(3,x_lower_bound,0)
         corr_matching = corr_matching.unsqueeze(-1).repeat(1,1,1,W2)
 
-        validation_loss = self.criterion(corr_matching,all_corr,mask_non_matching)
+        validation_loss = self.criterion(corr_matching,all_corr,mask_non_matching & masq_defined)
+        validation_loss= validation_loss.sum()
 
-        validation_loss= validation_loss.sum().div( 
-            torch.logical_and(mask_non_matching, masq_defined).count_nonzero() 
-                                            + 1e-12)
         self.log("val_loss",
                  validation_loss, 
                  prog_bar=True, 
@@ -260,7 +255,7 @@ class Model(LightningModule):
         grid = torch.cat([xgrido,ygrido], dim=1).permute(0,2,3,1) # B,H1,W1, 2
         # compute features at coordinates
         f_map2_pos = F.grid_sample(fmap2, grid, align_corners=True)
-
+        f_map2_pos = F.normalize(f_map2_pos,p=2.0, dim=1)
         # compute all pairs cosine similarities 
         # B,H,W1,W2
         all_corr = Model.corr(fmap1,fmap2)
@@ -284,11 +279,10 @@ class Model(LightningModule):
         mask_non_matching.scatter_(3,x_lower_bound,0)
         corr_matching = corr_matching.unsqueeze(-1).repeat(1,1,1,W2)
 
-        test_loss = self.criterion(corr_matching,all_corr,mask_non_matching)
+        test_loss = self.criterion(corr_matching,all_corr,mask_non_matching & masq_defined)
 
-        test_loss= test_loss.sum().div( 
-            torch.logical_and(mask_non_matching, masq_defined).count_nonzero() 
-                                            + 1e-12)
+        test_loss= test_loss.sum()
+
         self.log("test_loss",
                  test_loss, 
                  prog_bar=True, 
