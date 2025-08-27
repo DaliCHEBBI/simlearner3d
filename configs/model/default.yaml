@@ -15,7 +15,7 @@ monitor: "val_loss"
 
 false1: 1
 false2: 4
-learning_rate: 0.001
+learning_rate: 0.01
 load_pretrained: false
 
 

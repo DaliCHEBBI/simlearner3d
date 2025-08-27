@@ -2,18 +2,20 @@ import torch
 from pytorch_lightning import LightningModule
 from torch import nn
 
-from simlearner3d.models.modules.resnet_fpn import ResNetFPN_8_1, ResNetFPN_16_4
+from simlearner3d.models.modules.resnet_fpn import ResNetFPN_8_1, ResNetFPN_16_4, ResNet34Encoder_FPNDecoder
 from simlearner3d.models.modules.msaff import MSNet
 from simlearner3d.models.modules.unet import UNet
 from simlearner3d.models.modules.unetgatedattention import UNetGatedAttention
 from simlearner3d.models.modules.decision_net import DecisionNetwork
 import torch.nn.functional as F
 from simlearner3d.utils import utils
+from simlearner3d.utils.utils import coords_grid
 
 log = utils.get_logger(__name__)
 
-MODEL_ZOO = [ResNetFPN_8_1,MSNet,UNet,UNetGatedAttention]
+MODEL_ZOO = [ResNet34Encoder_FPNDecoder, ResNetFPN_8_1,MSNet,UNet,UNetGatedAttention]
 
+NODATA=-9999.0
 
 def get_neural_net_class(class_name: str) -> nn.Module:
     """A Class Factory to class of neural net based on class name.
@@ -88,18 +90,10 @@ class Model(LightningModule):
             self.decisionNet.load_state_dict(state_dict_decision)
 
     def training_step(self,batch, batch_idx: int):
-        x0,x1,dispnoc0,Mask0,x_offset=batch        
-        MaskDef=dispnoc0>=0.0
-        # ADD DIM 1
-        #dispnoc0=dispnoc0.unsqueeze(1)
-        # DISPNOC0 ++> DENSE DISPARITY Map 
-        #MaskDef=MaskDef.unsqueeze(1)  # ==> defined (occluded + non occluded + non available) disparity values 
-        # MASK 0 ==> non available + non occluded areas ==> we search for occluded areas  
-        #Mask0=Mask0.unsqueeze(1)
+        x0,x1,dispnoc0,Mask0,_=batch        
+        MaskDef=(dispnoc0!=NODATA)
         device='cuda' if x0.is_cuda else 'cpu'
         OCCLUDED=torch.logical_and(MaskDef,torch.logical_not(Mask0))
-        #print('OCCLUDEDE SHAPE ',torch.max(OCCLUDED))
-        # Forward
         FeatsL=self.feature(x0) 
         FeatsR=self.feature(x1)
         Offset_pos=- (0.5) * torch.rand(dispnoc0.size(),device=device) + (0.5)
@@ -111,12 +105,18 @@ class Model(LightningModule):
         #dispnoc0=torch.nan_to_num(dispnoc0, nan=0.0)
         D_pos=dispnoc0+Offset_pos
         D_neg=dispnoc0+Offset_neg
-        Index_X=torch.arange(0,dispnoc0.size()[-1],device=device)
-        Index_X=Index_X.expand(dispnoc0.size()[-2],dispnoc0.size()[-1]).unsqueeze(0).unsqueeze(0).repeat_interleave(x0.size()[0],0)
+        #Index_X=torch.arange(0,dispnoc0.size()[-1],device=device)
+        #Index_X=Index_X.expand(dispnoc0.size()[-2],dispnoc0.size()[-1]).unsqueeze(0).unsqueeze(0).repeat_interleave(x0.size()[0],0)
+
+        B,D,H1,W1  = FeatsL.shape
+        _,_,_, W2  = FeatsR.shape
+
+        coords = coords_grid(B,H1,W1,device) # B,2,H1,W1 
+        Index_X, _ = coords.split([1,1], dim=1)
         #print("INDEX SHAPE   ",Index_X.shape )
         # ADD OFFSET
         #print(x_offset.unsqueeze(0).T.shape)
-        Index_X=Index_X.add(x_offset.unsqueeze(0).T.unsqueeze(2).unsqueeze(3))
+        #Index_X=Index_X.add(x_offset.unsqueeze(0).T.unsqueeze(2).unsqueeze(3))
         Offp=Index_X-D_pos.round()  
         Offn=Index_X-D_neg.round() 
         # Clean Indexes so there is no overhead 
@@ -161,18 +161,10 @@ class Model(LightningModule):
         return training_loss
 
     def validation_step(self,batch,batch_idx: int):
-        x0,x1,dispnoc0,Mask0,x_offset=batch
-        MaskDef=dispnoc0>=0.0
-        # ADD DIM 1
-        #dispnoc0=dispnoc0.unsqueeze(1)
-        # DISPNOC0 ++> DENSE DISPARITY Map 
-        #MaskDef=MaskDef.unsqueeze(1)  # ==> defined (occluded + non occluded + non available) disparity values 
-        # MASK 0 ==> non available + non occluded areas ==> we search for occluded areas  
-        #Mask0=Mask0.unsqueeze(1)
-        OCCLUDED=torch.logical_and(MaskDef,torch.logical_not(Mask0))
-        #print('OCCLUDEDE SHAPE ',OCCLUDED.shape)
-        # Forward
+        x0,x1,dispnoc0,Mask0,_=batch        
+        MaskDef=(dispnoc0!=NODATA)
         device='cuda' if x0.is_cuda else 'cpu'
+        OCCLUDED=torch.logical_and(MaskDef,torch.logical_not(Mask0))
         FeatsL=self.feature(x0) 
         FeatsR=self.feature(x1)
         Offset_pos=- (0.5) * torch.rand(dispnoc0.size(),device=device) + (0.5)
@@ -184,12 +176,18 @@ class Model(LightningModule):
         #dispnoc0=torch.nan_to_num(dispnoc0, nan=0.0)
         D_pos=dispnoc0+Offset_pos
         D_neg=dispnoc0+Offset_neg
-        Index_X=torch.arange(0,dispnoc0.size()[-1],device=device)
-        Index_X=Index_X.expand(dispnoc0.size()[-2],dispnoc0.size()[-1]).unsqueeze(0).unsqueeze(0).repeat_interleave(x0.size()[0],0)
+        #Index_X=torch.arange(0,dispnoc0.size()[-1],device=device)
+        #Index_X=Index_X.expand(dispnoc0.size()[-2],dispnoc0.size()[-1]).unsqueeze(0).unsqueeze(0).repeat_interleave(x0.size()[0],0)
+
+        B,D,H1,W1  = FeatsL.shape
+        _,_,_, W2  = FeatsR.shape
+
+        coords = coords_grid(B,H1,W1,device) # B,2,H1,W1 
+        Index_X, _ = coords.split([1,1], dim=1)
         #print("INDEX SHAPE   ",Index_X.shape )
         # ADD OFFSET
         #print(x_offset.unsqueeze(0).T.shape)
-        Index_X=Index_X.add(x_offset.unsqueeze(0).T.unsqueeze(2).unsqueeze(3))
+        #Index_X=Index_X.add(x_offset.unsqueeze(0).T.unsqueeze(2).unsqueeze(3))
         Offp=Index_X-D_pos.round()  
         Offn=Index_X-D_neg.round() 
         # Clean Indexes so there is no overhead 
@@ -214,16 +212,16 @@ class Model(LightningModule):
                                            FeatsR_minus,
                                            OCCLUDED)
         else:
+
             ref_pos=self.decisionNet(torch.cat((FeatsL,FeatsR_plus),1))
             ref_neg=self.decisionNet(torch.cat((FeatsL,FeatsR_minus),1))
             sample = torch.cat((ref_pos, ref_neg), dim=0)
-            target = torch.cat((torch.ones(x0.size(),device=device)-OCCLUDED.float(), 
-                                torch.zeros(x0.size(),device=device)), 
-                                dim=0)
+            target = torch.cat((torch.ones(x0.size(),device=device)-OCCLUDED.float(),
+                                 torch.zeros(x0.size(),device=device)), 
+                                 dim=0)
             validation_loss=self.criterion(sample+1e-20, target)*torch.cat((MaskGlobP,MaskGlobN),0)
 
-        validation_loss=validation_loss.sum().div(MaskGlobP.count_nonzero()
-                                                  + MaskGlobN.count_nonzero()+1e-12)
+        validation_loss=validation_loss.sum().div(MaskGlobP.count_nonzero()+MaskGlobN.count_nonzero()+1e-12)
         self.log("val_loss",
                  validation_loss, 
                  prog_bar=True, 
@@ -234,18 +232,10 @@ class Model(LightningModule):
         return validation_loss
     
     def test_step(self,batch,batch_idx: int):
-        x0,x1,dispnoc0,Mask0,x_offset=batch
-        MaskDef=dispnoc0>=0.0
-        # ADD DIM 1
-        #dispnoc0=dispnoc0.unsqueeze(1)
-        # DISPNOC0 ++> DENSE DISPARITY Map 
-        #MaskDef=MaskDef.unsqueeze(1)  # ==> defined (occluded + non occluded + non available) disparity values 
-        # MASK 0 ==> non available + non occluded areas ==> we search for occluded areas  
-        #Mask0=Mask0.unsqueeze(1)
-        OCCLUDED=torch.logical_and(MaskDef,torch.logical_not(Mask0))
-        #print('OCCLUDEDE SHAPE ',OCCLUDED.shape)
-        # Forward
+        x0,x1,dispnoc0,Mask0,_=batch        
+        MaskDef=(dispnoc0!=NODATA)
         device='cuda' if x0.is_cuda else 'cpu'
+        OCCLUDED=torch.logical_and(MaskDef,torch.logical_not(Mask0))
         FeatsL=self.feature(x0) 
         FeatsR=self.feature(x1)
         Offset_pos=- (0.5) * torch.rand(dispnoc0.size(),device=device) + (0.5)
@@ -257,12 +247,18 @@ class Model(LightningModule):
         #dispnoc0=torch.nan_to_num(dispnoc0, nan=0.0)
         D_pos=dispnoc0+Offset_pos
         D_neg=dispnoc0+Offset_neg
-        Index_X=torch.arange(0,dispnoc0.size()[-1],device=device)
-        Index_X=Index_X.expand(dispnoc0.size()[-2],dispnoc0.size()[-1]).unsqueeze(0).unsqueeze(0).repeat_interleave(x0.size()[0],0)
+        #Index_X=torch.arange(0,dispnoc0.size()[-1],device=device)
+        #Index_X=Index_X.expand(dispnoc0.size()[-2],dispnoc0.size()[-1]).unsqueeze(0).unsqueeze(0).repeat_interleave(x0.size()[0],0)
+
+        B,D,H1,W1  = FeatsL.shape
+        _,_,_, W2  = FeatsR.shape
+
+        coords = coords_grid(B,H1,W1,device) # B,2,H1,W1 
+        Index_X, _ = coords.split([1,1], dim=1)
         #print("INDEX SHAPE   ",Index_X.shape )
         # ADD OFFSET
         #print(x_offset.unsqueeze(0).T.shape)
-        Index_X=Index_X.add(x_offset.unsqueeze(0).T.unsqueeze(2).unsqueeze(3))
+        #Index_X=Index_X.add(x_offset.unsqueeze(0).T.unsqueeze(2).unsqueeze(3))
         Offp=Index_X-D_pos.round()  
         Offn=Index_X-D_neg.round() 
         # Clean Indexes so there is no overhead 
@@ -287,16 +283,16 @@ class Model(LightningModule):
                                            FeatsR_minus,
                                            OCCLUDED)
         else:
+
             ref_pos=self.decisionNet(torch.cat((FeatsL,FeatsR_plus),1))
             ref_neg=self.decisionNet(torch.cat((FeatsL,FeatsR_minus),1))
             sample = torch.cat((ref_pos, ref_neg), dim=0)
             target = torch.cat((torch.ones(x0.size(),device=device)-OCCLUDED.float(),
-                                torch.zeros(x0.size(),device=device)),
-                                dim=0)
+                                 torch.zeros(x0.size(),device=device)), 
+                                 dim=0)
             test_loss=self.criterion(sample+1e-20, target)*torch.cat((MaskGlobP,MaskGlobN),0)
 
-        test_loss=test_loss.sum().div(MaskGlobP.count_nonzero()
-                                                  + MaskGlobN.count_nonzero()+1e-12)
+        test_loss=test_loss.sum().div(MaskGlobP.count_nonzero()+MaskGlobN.count_nonzero()+1e-12)
         self.log("test_loss",
                  test_loss, 
                  prog_bar=True, 

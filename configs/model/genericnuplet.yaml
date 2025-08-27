@@ -15,11 +15,11 @@ monitor: "val_loss"
 
 false1: 1
 false2: 4
-learning_rate: 0.001
+learning_rate: 0.1
 load_pretrained: false
 
 
 defaults:
   - optimizer: Adam.yaml
-  - lr_scheduler: ReduceLROnPlateau.yaml
+  - lr_scheduler: OneCycleLR.yaml
   - criterion: MaskedNUpletLoss.yaml

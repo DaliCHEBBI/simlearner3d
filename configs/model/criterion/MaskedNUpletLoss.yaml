@@ -1,2 +1,2 @@
 _target_: simlearner3d.models.criterion.masked_triplet_loss.NMaskedPairLoss
-margin: 0.3
+margin: 0.45

@@ -1,7 +1,7 @@
 defaults:
-  - genericnuplet.yaml
-  - override criterion: MaskedNUpletLoss.yaml
-lr: 0.001  
+  - default.yaml
+  #- override criterion: MaskedNUpletLoss.yaml
+lr: 0.01  
 
 neural_net_class_name: "ResNet34Encoder_FPNDecoder"
 neural_net_hparams:
