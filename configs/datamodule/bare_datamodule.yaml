@@ -1,0 +1,28 @@
+_target_: simlearner3d.processing.datamodule.hdf5.BareStereoDataModule
+
+# A standalone precomputed HDF5 dataset can be used without source files by setting data_dir and split_csv_path to null.
+data_dir: null  # data dir where images and gt and ground truth
+split_csv_path: null  # csv specifying split, with schema basename, split (where split is one out of train/val/test)
+
+# functions used to load and preprocess LAS data points into a pytorch geometric Data object.
+images_pre_transform:
+  _target_: functools.partial
+  _args_:
+    - "${get_method:simlearner3d.processing.dataset.utils.read_images_and_create_full_data_obj}"
+
+tile_width: 1024
+tile_height: 1024
+patch_size: 768
+sign_disp_multiplier: 1
+masq_divider: 1
+subtile_width: 50
+subtile_overlap_train: 0
+subtile_overlap_predict: 0
+
+
+batch_size: 16
+num_workers: 3
+prefetch_factor: 1
+
+defaults:
+  - transforms: default.yaml

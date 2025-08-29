@@ -21,6 +21,135 @@ from simlearner3d.processing.dataset.utils import (
 
 log = utils.get_logger(__name__)
 
+
+
+
+class BareDataset(Dataset):
+    """Single-file HDF5 dataset for collections of large LAS tiles."""
+
+    def __init__(
+        self,
+        image_paths_by_split_dict: IMAGE_PATHS_BY_SPLIT_DICT_TYPE,
+        images_pre_transform: Callable = read_images_and_create_full_data_obj,
+        tile_width: Number = 1024,
+        tile_height: Number= 1024,
+        patch_size: Number = 768,
+        subtile_width: Number = 50,
+        sign_disp_multiplier: Number = 1,
+        masq_divider: Number = 1,
+        subtile_overlap_train: Number = 0,
+        train_transform: List[Callable] = None,
+        eval_transform: List[Callable] = None,
+    ):
+        """
+
+        Args:
+        image_paths_by_split_dict ([IMAGE_PATHS_BY_SPLIT_DICT_TYPE]): should look like
+                    image_paths_by_split_dict = {'train': [('dir/left.tif','dir/right.tif','dir/disp1.tif','dir/msq1.tif'),.....],
+                    'test': [...]},
+            images_pre_transform (Callable): Function to turn images to Data Object.
+            tile_width (Number, optional) : width of a IMAGE Defaults to 1024.
+            tile_height (Number, optional): width of a IMAGE Defaults to 1024.
+            patch_size: (Number, optional): width of a IMAGE patch for training. Defaults to 768.
+            subtile_width (Number, optional): effective width of a subtile (i.e. receptive field). Defaults to 50.
+            train_transform (List[Callable], optional): Transforms to apply to a sample for training. Defaults to None.
+            eval_transform (List[Callable], optional): Transforms to apply to a sample for evaluation (test/val sets). Defaults to None.
+        """
+
+        self.train_transform = train_transform
+        self.eval_transform = eval_transform
+
+        self.tile_width = tile_width
+        self.tile_height=tile_height
+        self.patch_size=patch_size
+        self.sign_disp_multiplier=sign_disp_multiplier
+        self.masq_divider=masq_divider
+
+        self.subtile_width = subtile_width
+        self.subtile_overlap_train = subtile_overlap_train
+        self.images_pre_transform=images_pre_transform
+
+        self._samples_image_paths=None
+
+
+        # Instantiates these to null;
+        # They are loaded within __getitem__ to support multi-processing training.
+        self.dataset = None
+
+        if not image_paths_by_split_dict:
+            log.warning(
+                "No image_paths_by_split_dict given, pre-computed HDF5 dataset is therefore used."
+            )
+            return
+        self.image_paths_by_split_dict=image_paths_by_split_dict
+
+        # Use property once to be sure that samples are all indexed into the hdf5 file.
+        self.samples_image_paths
+
+    def __getitem__(self, idx: int) -> Optional[Data]:
+        sample_path = self.samples_image_paths[idx] # split, tuple(left,right,disp,masq)
+        data = self._get_data(sample_path)
+        #----------------------------------------------------------------------------#
+        transform = self.train_transform
+        if sample_path[0]=="val" or sample_path[0]=="test":
+            transform = self.eval_transform
+        if transform:
+            data = transform(data)
+        if data._left.ndim==2:
+            data._left=data._left.unsqueeze(0)
+        if data._right.ndim==2:
+            data._right=data._right.unsqueeze(0)
+        if data._disp.ndim==2:
+            data._disp=data._disp.unsqueeze(0)
+        if data._masq.ndim==2:    
+            data._masq=data._masq.unsqueeze(0)
+        return data._left, data._right,data._disp,data._masq,data._xupl
+        #----------------------------------------------------------------------------#
+
+
+    def _get_data(self, sample_path: str) -> Data:
+        data= self.images_pre_transform(sample_path[1])
+        return Data(
+            _left=torch.from_numpy(data._left),
+            _right=torch.from_numpy(data._right),
+            _disp=torch.from_numpy(data._disp).mul(self.sign_disp_multiplier), # do it once for all 
+            _masq=torch.from_numpy(data._masq).div(self.masq_divider), # do it once for all
+        )
+        
+    def __len__(self):
+        return len(self.samples_image_paths)
+
+    @property
+    def traindata(self):
+        return self._get_split_subset("train")
+
+    @property
+    def valdata(self):
+        return self._get_split_subset("val")
+
+    @property
+    def testdata(self):
+        return self._get_split_subset("test")
+
+    def _get_split_subset(self, split: SPLIT_TYPE):
+        """Get a sub-dataset of a specific (train/val/test) split."""
+        indices = [idx for idx, p in enumerate(self.samples_image_paths) if p[0]==split]
+        return torch.utils.data.Subset(self, indices)
+
+    @property
+    def samples_image_paths(self):
+        """Index all samples in the dataset, if not already done before."""
+        # Use existing if already loaded as variable.
+        if self._samples_image_paths:
+            return self._samples_image_paths
+        self._samples_hdf5_paths = []
+        for split in ["train", "val", "test"]:
+            for sample in self.image_paths_by_split_dict[split]:
+                self._samples_hdf5_paths.append([split,sample])
+        return self._samples_hdf5_paths
+
+
+
 class HDF5Dataset(Dataset):
     """Single-file HDF5 dataset for collections of large LAS tiles."""
 
@@ -245,22 +374,19 @@ def create_hdf5(
                 if not images_pre_transform:
                     continue
                 data = images_pre_transform(image_gt_masq_set)
-                print(data._left.shape)
-
-                
                 if basename_left not in hdf5_file[split]:
                      hdf5_file[split].create_group(basename_left)
 
                 hdf5_file[split][basename_left].create_dataset(
                     "l",
                     data._left.shape,
-                    dtype="f",
+                    dtype="u1",
                     data=data._left,
                 )
                 hdf5_file[split][basename_left].create_dataset(
                     "r",
                     data._right.shape,
-                    dtype="f",
+                    dtype="u1",
                     data=data._right,
                 )
                 hdf5_file[split][basename_left].create_dataset(
@@ -272,7 +398,7 @@ def create_hdf5(
                 hdf5_file[split][basename_left].create_dataset(
                     "m",
                     data._masq.shape,
-                    dtype="f",
+                    dtype="u1",
                     data=data._masq,
                 )
                 # A termination flag to report that all samples for this point cloud were included in the df5 file.
