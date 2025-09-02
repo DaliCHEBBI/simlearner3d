@@ -1,0 +1,4 @@
+_target_: functools.partial
+_args_: 
+  - ${get_method:torch.optim.lr_scheduler.CosineAnnealingLR}
+T_max: ${trainer.min_epochs}

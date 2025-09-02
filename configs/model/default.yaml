@@ -20,6 +20,6 @@ load_pretrained: false
 
 
 defaults:
-  - optimizer: Adam.yaml
-  - lr_scheduler: OneCycleLR.yaml
+  - optimizer: AdamW.yaml
+  - lr_scheduler: CosineAnnealingLR.yaml
   - criterion: MaskedTripletLoss.yaml
