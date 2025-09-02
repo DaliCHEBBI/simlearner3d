@@ -13,12 +13,14 @@ from typing import List
 import hydra
 from omegaconf import DictConfig
 from pytorch_lightning import (
+    tuner,
     Callback,
     LightningDataModule,
     LightningModule,
     Trainer,
     seed_everything,
 )
+
 
 
 from pytorch_lightning.loggers import  Logger
@@ -116,7 +118,17 @@ def train(config: DictConfig) -> Trainer:
         if config.task.auto_lr_find:
             log.info("Finding best lr with auto_lr_find!")
             # Run learn ing rate finder
-            lr_finder = trainer.tuner.lr_find(
+            """lr_finder = trainer.tuner.lr_find(
+                model,
+                datamodule=datamodule,
+                min_lr=1e-6,
+                max_lr=3,
+                num_training=200,
+                mode="exponential",
+            )"""
+
+            _tuner = tuner.Tuner(trainer)
+            lr_finder = _tuner.lr_find(
                 model,
                 datamodule=datamodule,
                 min_lr=1e-6,
