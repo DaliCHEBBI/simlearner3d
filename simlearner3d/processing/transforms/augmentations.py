@@ -111,13 +111,15 @@ class DownScaleImage:
             _left_down=F.interpolate(data._left.unsqueeze(0).unsqueeze(0),
                             scale_factor=scale_factor,
                             mode='bilinear')
-            _right_down=F.interpolate(data._right.unsqueeze(0).unsqueeze(0),
-                            scale_factor=scale_factor,
-                            mode='bilinear')
         else:
             _left_down=F.interpolate(data._left.unsqueeze(0),
                             scale_factor=scale_factor,
                             mode='bilinear')
+        if data._right.ndim==2:
+            _right_down=F.interpolate(data._right.unsqueeze(0).unsqueeze(0),
+                            scale_factor=scale_factor,
+                            mode='bilinear')    
+        else:
             _right_down=F.interpolate(data._right.unsqueeze(0),
                             scale_factor=scale_factor,
                             mode='bilinear') 
