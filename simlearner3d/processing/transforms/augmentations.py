@@ -101,8 +101,9 @@ class DownScaleImage:
         self.scales=scales
     
     def __call__(self, data: Data):
-        scale_factor=random.choice(self.scales)
-        data=self.apply_scale(data,scale_factor)
+        if random.random()< 0.5 :
+            scale_factor=random.choice(self.scales)
+            data=self.apply_scale(data,scale_factor)
         return data
     
     def apply_scale(self,data: Data,scale_factor):
