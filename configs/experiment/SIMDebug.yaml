@@ -7,7 +7,7 @@ defaults:
 
 logger:
   comet:
-    experiment_name: "resnet_fpn_model_nuplet_loss"
+    experiment_name: "resnet_fpn_model_triplet_loss"
     disabled: false
 
 trainer:
