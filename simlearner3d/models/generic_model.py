@@ -36,6 +36,7 @@ def get_neural_net_class(class_name: str) -> nn.Module:
 
 
 STEPS= [1.0,0.5,0.25,0.125]
+PROBAS=[0.3,0.3,0.3,0.1]
 
 DEFAULT_MODE="feature"
 
@@ -103,7 +104,7 @@ class Model(LightningModule):
         B,D,H1,W1  = FeatsL.shape
         _,_,_, W2  = FeatsR.shape
 
-        aStep= np.random.choice(STEPS)
+        aStep= np.random.choice(STEPS,p=PROBAS)
 
         Offset_neg=((self.false1 - self.false2) * torch.rand(dispnoc0.size(),device=device) + self.false2) * aStep
         RandSens=torch.rand(dispnoc0.size(),device=device)
@@ -142,7 +143,7 @@ class Model(LightningModule):
                                  torch.zeros(x0.size(),device=device)), 
                                  dim=0)
             training_loss=self.criterion(sample+1e-20, target)*torch.cat((MaskDef,MaskDef),0)
-        training_loss=training_loss.sum().div(MaskDef.count_nonzero()+1e-12)
+        training_loss=training_loss.mul(MaskDef).sum().div(MaskDef.count_nonzero()+1e-12)
         self.log("training_loss",
                  training_loss, 
                  prog_bar=True,
@@ -163,7 +164,7 @@ class Model(LightningModule):
         B,D,H1,W1  = FeatsL.shape
         _,_,_, W2  = FeatsR.shape
 
-        aStep= np.random.choice(STEPS)
+        aStep= np.random.choice(STEPS,p=PROBAS)
 
         Offset_neg=((self.false1 - self.false2) * torch.rand(dispnoc0.size(),device=device) + self.false2) * aStep
         RandSens=torch.rand(dispnoc0.size(),device=device)
@@ -201,7 +202,7 @@ class Model(LightningModule):
                                  torch.zeros(x0.size(),device=device)), 
                                  dim=0)
             validation_loss=self.criterion(sample+1e-20, target)*torch.cat((MaskDef,MaskDef),0)
-        validation_loss=validation_loss.sum().div(MaskDef.count_nonzero()+1e-12)
+        validation_loss=validation_loss.mul(MaskDef).sum().div(MaskDef.count_nonzero()+1e-12)
 
         self.log("val_loss",
                  validation_loss, 
@@ -223,7 +224,7 @@ class Model(LightningModule):
         B,D,H1,W1  = FeatsL.shape
         _,_,_, W2  = FeatsR.shape
 
-        aStep= np.random.choice(STEPS)
+        aStep= np.random.choice(STEPS,p=PROBAS)
 
         Offset_neg=((self.false1 - self.false2) * torch.rand(dispnoc0.size(),device=device) + self.false2) * aStep
         RandSens=torch.rand(dispnoc0.size(),device=device)
@@ -261,7 +262,7 @@ class Model(LightningModule):
                                  torch.zeros(x0.size(),device=device)), 
                                  dim=0)
             test_loss=self.criterion(sample+1e-20, target)*torch.cat((MaskDef,MaskDef),0)
-        test_loss=test_loss.sum().div(MaskDef.count_nonzero()+1e-12)
+        test_loss=test_loss.mul(MaskDef).sum().div(MaskDef.count_nonzero()+1e-12)
 
         self.log("test_loss",
                  test_loss, 
