@@ -10,6 +10,7 @@ from simlearner3d.models.modules.decision_net import DecisionNetwork
 import torch.nn.functional as F
 from simlearner3d.utils import utils
 from simlearner3d.utils.utils import coords_grid
+import numpy as np
 
 log = utils.get_logger(__name__)
 
@@ -33,6 +34,8 @@ def get_neural_net_class(class_name: str) -> nn.Module:
             return neural_net_class
     raise KeyError(f"Unknown class name {class_name}")
 
+
+STEPS= [1.0,0.5,0.25,0.125]
 
 DEFAULT_MODE="feature"
 
@@ -96,45 +99,35 @@ class Model(LightningModule):
         OCCLUDED=torch.logical_and(MaskDef,torch.logical_not(Mask0))
         FeatsL=self.feature(x0) 
         FeatsR=self.feature(x1)
-        Offset_pos=- (0.5) * torch.rand(dispnoc0.size(),device=device) + (0.5)
-        Offset_neg=((self.false1 - self.false2) * torch.rand(dispnoc0.size(),device=device) + self.false2)
-        RandSens=torch.rand(dispnoc0.size(),device=device)
-        RandSens=((RandSens < 0.5).float()+(RandSens >= 0.5).float()*(-1.0))
-        Offset_pos=Offset_pos*RandSens
-        Offset_neg=Offset_neg*RandSens
-        #dispnoc0=torch.nan_to_num(dispnoc0, nan=0.0)
-        D_pos=dispnoc0+Offset_pos
-        D_neg=dispnoc0+Offset_neg
-        #Index_X=torch.arange(0,dispnoc0.size()[-1],device=device)
-        #Index_X=Index_X.expand(dispnoc0.size()[-2],dispnoc0.size()[-1]).unsqueeze(0).unsqueeze(0).repeat_interleave(x0.size()[0],0)
 
         B,D,H1,W1  = FeatsL.shape
         _,_,_, W2  = FeatsR.shape
 
+        aStep= np.random.choice(STEPS)
+
+        Offset_neg=((self.false1 - self.false2) * torch.rand(dispnoc0.size(),device=device) + self.false2) * aStep
+        RandSens=torch.rand(dispnoc0.size(),device=device)
+        RandSens=((RandSens < 0.5).float()+(RandSens >= 0.5).float()*(-1.0))
+        Offset_neg=Offset_neg*RandSens
+
+
         coords = coords_grid(B,H1,W1,device) # B,2,H1,W1 
-        Index_X, _ = coords.split([1,1], dim=1)
-        #print("INDEX SHAPE   ",Index_X.shape )
-        # ADD OFFSET
-        #print(x_offset.unsqueeze(0).T.shape)
-        #Index_X=Index_X.add(x_offset.unsqueeze(0).T.unsqueeze(2).unsqueeze(3))
-        Offp=Index_X-D_pos.round()  
-        Offn=Index_X-D_neg.round() 
-        # Clean Indexes so there is no overhead 
-        MaskOffPositive=((Offp>=0)*(Offp<FeatsR.size()[-1])).float()
-        MaskOffNegative=((Offn>=0)*(Offn<FeatsR.size()[-1])).float()
-        # Cleaned Offp and Offn
-        Offp=(Offp*MaskOffPositive).to(torch.int64)
-        Offn=(Offn*MaskOffNegative).to(torch.int64)
-        # Need to repeat interleave 
-        Offp=Offp.repeat_interleave(FeatsR.size()[1],1)
-        Offn=Offn.repeat_interleave(FeatsR.size()[1],1)
-        # Get Examples positive and negative 
-        FeatsR_plus=torch.gather(FeatsR,-1,Offp)
-        # Test gather operator 
-        FeatsR_minus=torch.gather(FeatsR,-1,Offn)
-        # Mask Global = Mask des batiments + Mask des offsets bien definis 
-        MaskGlobP=MaskDef*MaskOffPositive
-        MaskGlobN=MaskDef*MaskOffNegative
+        xgrid0, ygrid = coords.split([1,1], dim=1)
+        xgrid = xgrid0 - dispnoc0
+        xgrid_pos = torch.clamp(torch.round(xgrid/aStep)*aStep,0,W2-1)
+        xgrid_neg = torch.clamp(torch.round((xgrid-Offset_neg)/aStep)*aStep,0,W2-1)
+        # noramlize between [-1,1]
+        # grid of positive samples
+        xgrid_pos = 2*xgrid_pos/(W2-1) - 1
+        # grid of negative samples 
+        xgrid_neg = 2*xgrid_neg/(W2-1) - 1
+        ygrid = 2*ygrid/(H1-1) - 1
+
+        grid_p = torch.cat([xgrid_pos,ygrid], dim=1).permute(0,2,3,1) # B,H1,W1, 2
+        grid_n = torch.cat([xgrid_neg,ygrid], dim=1).permute(0,2,3,1) # B,H1,W1, 2
+        # compute features at coordinates
+        FeatsR_plus = F.grid_sample(FeatsR, grid_p, align_corners=True)
+        FeatsR_minus = F.grid_sample(FeatsR, grid_n, align_corners=True)
         if self.mode==DEFAULT_MODE:
             training_loss=self.criterion(FeatsL,
                                            FeatsR_plus,
@@ -148,9 +141,8 @@ class Model(LightningModule):
             target = torch.cat((torch.ones(x0.size(),device=device)-OCCLUDED.float(),
                                  torch.zeros(x0.size(),device=device)), 
                                  dim=0)
-            training_loss=self.criterion(sample+1e-20, target)*torch.cat((MaskGlobP,MaskGlobN),0)
-
-        training_loss=training_loss.sum().div(MaskGlobP.count_nonzero()+MaskGlobN.count_nonzero()+1e-12)
+            training_loss=self.criterion(sample+1e-20, target)*torch.cat((MaskDef,MaskDef),0)
+        training_loss=training_loss.sum().div(MaskDef.count_nonzero()+1e-12)
         self.log("training_loss",
                  training_loss, 
                  prog_bar=True,
@@ -167,67 +159,56 @@ class Model(LightningModule):
         OCCLUDED=torch.logical_and(MaskDef,torch.logical_not(Mask0))
         FeatsL=self.feature(x0) 
         FeatsR=self.feature(x1)
-        Offset_pos=- (0.5) * torch.rand(dispnoc0.size(),device=device) + (0.5)
-        Offset_neg=((self.false1 - self.false2) * torch.rand(dispnoc0.size(),device=device) + self.false2)
-        RandSens=torch.rand(dispnoc0.size(),device=device)
-        RandSens=((RandSens < 0.5).float()+(RandSens >= 0.5).float()*(-1.0))
-        Offset_pos=Offset_pos*RandSens
-        Offset_neg=Offset_neg*RandSens
-        #dispnoc0=torch.nan_to_num(dispnoc0, nan=0.0)
-        D_pos=dispnoc0+Offset_pos
-        D_neg=dispnoc0+Offset_neg
-        #Index_X=torch.arange(0,dispnoc0.size()[-1],device=device)
-        #Index_X=Index_X.expand(dispnoc0.size()[-2],dispnoc0.size()[-1]).unsqueeze(0).unsqueeze(0).repeat_interleave(x0.size()[0],0)
 
         B,D,H1,W1  = FeatsL.shape
         _,_,_, W2  = FeatsR.shape
 
+        aStep= np.random.choice(STEPS)
+
+        Offset_neg=((self.false1 - self.false2) * torch.rand(dispnoc0.size(),device=device) + self.false2) * aStep
+        RandSens=torch.rand(dispnoc0.size(),device=device)
+        RandSens=((RandSens < 0.5).float()+(RandSens >= 0.5).float()*(-1.0))
+        Offset_neg=Offset_neg*RandSens
+
+        
         coords = coords_grid(B,H1,W1,device) # B,2,H1,W1 
-        Index_X, _ = coords.split([1,1], dim=1)
-        #print("INDEX SHAPE   ",Index_X.shape )
-        # ADD OFFSET
-        #print(x_offset.unsqueeze(0).T.shape)
-        #Index_X=Index_X.add(x_offset.unsqueeze(0).T.unsqueeze(2).unsqueeze(3))
-        Offp=Index_X-D_pos.round()  
-        Offn=Index_X-D_neg.round() 
-        # Clean Indexes so there is no overhead 
-        MaskOffPositive=((Offp>=0)*(Offp<FeatsR.size()[-1])).float()
-        MaskOffNegative=((Offn>=0)*(Offn<FeatsR.size()[-1])).float()
-        # Cleaned Offp and Offn
-        Offp=(Offp*MaskOffPositive).to(torch.int64)
-        Offn=(Offn*MaskOffNegative).to(torch.int64)
-        # Need to repeat interleave 
-        Offp=Offp.repeat_interleave(FeatsR.size()[1],1)
-        Offn=Offn.repeat_interleave(FeatsR.size()[1],1)
-        # Get Examples positive and negative 
-        FeatsR_plus=torch.gather(FeatsR,-1,Offp)
-        # Test gather operator 
-        FeatsR_minus=torch.gather(FeatsR,-1,Offn)
-        # Mask Global = Mask des batiments + Mask des offsets bien definis 
-        MaskGlobP=MaskDef*MaskOffPositive
-        MaskGlobN=MaskDef*MaskOffNegative
+        xgrid0, ygrid = coords.split([1,1], dim=1)
+        xgrid = xgrid0 - dispnoc0
+        xgrid_pos = torch.clamp(torch.round(xgrid/aStep)*aStep,0,W2-1)
+        xgrid_neg = torch.clamp(torch.round((xgrid-Offset_neg)/aStep)*aStep,0,W2-1)
+        # noramlize between [-1,1]
+        # grid of positive samples
+        xgrid_pos = 2*xgrid_pos/(W2-1) - 1
+        # grid of negative samples 
+        xgrid_neg = 2*xgrid_neg/(W2-1) - 1
+        ygrid = 2*ygrid/(H1-1) - 1
+
+        grid_p = torch.cat([xgrid_pos,ygrid], dim=1).permute(0,2,3,1) # B,H1,W1, 2
+        grid_n = torch.cat([xgrid_neg,ygrid], dim=1).permute(0,2,3,1) # B,H1,W1, 2
+        # compute features at coordinates
+        FeatsR_plus = F.grid_sample(FeatsR, grid_p, align_corners=True)
+        FeatsR_minus = F.grid_sample(FeatsR, grid_n, align_corners=True)
         if self.mode==DEFAULT_MODE:
             validation_loss=self.criterion(FeatsL,
                                            FeatsR_plus,
                                            FeatsR_minus,
                                            OCCLUDED)
         else:
-
             ref_pos=self.decisionNet(torch.cat((FeatsL,FeatsR_plus),1))
             ref_neg=self.decisionNet(torch.cat((FeatsL,FeatsR_minus),1))
             sample = torch.cat((ref_pos, ref_neg), dim=0)
             target = torch.cat((torch.ones(x0.size(),device=device)-OCCLUDED.float(),
                                  torch.zeros(x0.size(),device=device)), 
                                  dim=0)
-            validation_loss=self.criterion(sample+1e-20, target)*torch.cat((MaskGlobP,MaskGlobN),0)
+            validation_loss=self.criterion(sample+1e-20, target)*torch.cat((MaskDef,MaskDef),0)
+        validation_loss=validation_loss.sum().div(MaskDef.count_nonzero()+1e-12)
 
-        validation_loss=validation_loss.sum().div(MaskGlobP.count_nonzero()+MaskGlobN.count_nonzero()+1e-12)
         self.log("val_loss",
                  validation_loss, 
-                 prog_bar=True, 
+                 prog_bar=True,
                  logger=True, 
                  on_step=True, 
-                 on_epoch=True, 
+                 on_epoch=True,
                  sync_dist=True)
         return validation_loss
     
@@ -238,67 +219,56 @@ class Model(LightningModule):
         OCCLUDED=torch.logical_and(MaskDef,torch.logical_not(Mask0))
         FeatsL=self.feature(x0) 
         FeatsR=self.feature(x1)
-        Offset_pos=- (0.5) * torch.rand(dispnoc0.size(),device=device) + (0.5)
-        Offset_neg=((self.false1 - self.false2) * torch.rand(dispnoc0.size(),device=device) + self.false2)
-        RandSens=torch.rand(dispnoc0.size(),device=device)
-        RandSens=((RandSens < 0.5).float()+(RandSens >= 0.5).float()*(-1.0))
-        Offset_pos=Offset_pos*RandSens
-        Offset_neg=Offset_neg*RandSens
-        #dispnoc0=torch.nan_to_num(dispnoc0, nan=0.0)
-        D_pos=dispnoc0+Offset_pos
-        D_neg=dispnoc0+Offset_neg
-        #Index_X=torch.arange(0,dispnoc0.size()[-1],device=device)
-        #Index_X=Index_X.expand(dispnoc0.size()[-2],dispnoc0.size()[-1]).unsqueeze(0).unsqueeze(0).repeat_interleave(x0.size()[0],0)
 
         B,D,H1,W1  = FeatsL.shape
         _,_,_, W2  = FeatsR.shape
 
+        aStep= np.random.choice(STEPS)
+
+        Offset_neg=((self.false1 - self.false2) * torch.rand(dispnoc0.size(),device=device) + self.false2) * aStep
+        RandSens=torch.rand(dispnoc0.size(),device=device)
+        RandSens=((RandSens < 0.5).float()+(RandSens >= 0.5).float()*(-1.0))
+        Offset_neg=Offset_neg*RandSens
+
+        
         coords = coords_grid(B,H1,W1,device) # B,2,H1,W1 
-        Index_X, _ = coords.split([1,1], dim=1)
-        #print("INDEX SHAPE   ",Index_X.shape )
-        # ADD OFFSET
-        #print(x_offset.unsqueeze(0).T.shape)
-        #Index_X=Index_X.add(x_offset.unsqueeze(0).T.unsqueeze(2).unsqueeze(3))
-        Offp=Index_X-D_pos.round()  
-        Offn=Index_X-D_neg.round() 
-        # Clean Indexes so there is no overhead 
-        MaskOffPositive=((Offp>=0)*(Offp<FeatsR.size()[-1])).float()
-        MaskOffNegative=((Offn>=0)*(Offn<FeatsR.size()[-1])).float()
-        # Cleaned Offp and Offn
-        Offp=(Offp*MaskOffPositive).to(torch.int64)
-        Offn=(Offn*MaskOffNegative).to(torch.int64)
-        # Need to repeat interleave 
-        Offp=Offp.repeat_interleave(FeatsR.size()[1],1)
-        Offn=Offn.repeat_interleave(FeatsR.size()[1],1)
-        # Get Examples positive and negative 
-        FeatsR_plus=torch.gather(FeatsR,-1,Offp)
-        # Test gather operator 
-        FeatsR_minus=torch.gather(FeatsR,-1,Offn)
-        # Mask Global = Mask des batiments + Mask des offsets bien definis 
-        MaskGlobP=MaskDef*MaskOffPositive
-        MaskGlobN=MaskDef*MaskOffNegative
+        xgrid0, ygrid = coords.split([1,1], dim=1)
+        xgrid = xgrid0 - dispnoc0
+        xgrid_pos = torch.clamp(torch.round(xgrid/aStep)*aStep,0,W2-1)
+        xgrid_neg = torch.clamp(torch.round((xgrid-Offset_neg)/aStep)*aStep,0,W2-1)
+        # noramlize between [-1,1]
+        # grid of positive samples
+        xgrid_pos = 2*xgrid_pos/(W2-1) - 1
+        # grid of negative samples 
+        xgrid_neg = 2*xgrid_neg/(W2-1) - 1
+        ygrid = 2*ygrid/(H1-1) - 1
+
+        grid_p = torch.cat([xgrid_pos,ygrid], dim=1).permute(0,2,3,1) # B,H1,W1, 2
+        grid_n = torch.cat([xgrid_neg,ygrid], dim=1).permute(0,2,3,1) # B,H1,W1, 2
+        # compute features at coordinates
+        FeatsR_plus = F.grid_sample(FeatsR, grid_p, align_corners=True)
+        FeatsR_minus = F.grid_sample(FeatsR, grid_n, align_corners=True)
         if self.mode==DEFAULT_MODE:
             test_loss=self.criterion(FeatsL,
                                            FeatsR_plus,
                                            FeatsR_minus,
                                            OCCLUDED)
         else:
-
             ref_pos=self.decisionNet(torch.cat((FeatsL,FeatsR_plus),1))
             ref_neg=self.decisionNet(torch.cat((FeatsL,FeatsR_minus),1))
             sample = torch.cat((ref_pos, ref_neg), dim=0)
             target = torch.cat((torch.ones(x0.size(),device=device)-OCCLUDED.float(),
                                  torch.zeros(x0.size(),device=device)), 
                                  dim=0)
-            test_loss=self.criterion(sample+1e-20, target)*torch.cat((MaskGlobP,MaskGlobN),0)
+            test_loss=self.criterion(sample+1e-20, target)*torch.cat((MaskDef,MaskDef),0)
+        test_loss=test_loss.sum().div(MaskDef.count_nonzero()+1e-12)
 
-        test_loss=test_loss.sum().div(MaskGlobP.count_nonzero()+MaskGlobN.count_nonzero()+1e-12)
         self.log("test_loss",
                  test_loss, 
-                 prog_bar=True, 
+                 prog_bar=True,
                  logger=True, 
                  on_step=True, 
-                 on_epoch=True, 
+                 on_epoch=True,
                  sync_dist=True)
         return test_loss
     
