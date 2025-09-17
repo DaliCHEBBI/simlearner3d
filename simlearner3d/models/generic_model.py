@@ -35,8 +35,8 @@ def get_neural_net_class(class_name: str) -> nn.Module:
     raise KeyError(f"Unknown class name {class_name}")
 
 
-STEPS= [1.0,0.5,0.25,0.125]
-PROBAS=[0.3,0.3,0.3,0.1]
+STEPS= [1.0,0.5]
+PROBAS=[0.5,0.5]
 
 DEFAULT_MODE="feature"
 
