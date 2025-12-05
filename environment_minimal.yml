@@ -1,0 +1,21 @@
+# Simple install with
+# mamba env create -f environment.yml
+name: simlearner3d
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+dependencies:
+  - python=3.9.*
+  - pip
+  # --------- Deep Learning --------- #
+  - pytorch::pytorch=2.1
+  - pytorch::pytorch-cuda=11.8
+  - pytorch::torchvision=0.16
+  # --------- data formats --------- #
+  - numpy==1.26.4
+  - pip:
+      - tifffile
+      - tqdm
+      - opt-einsum
+      - rasterio>=1.3.8

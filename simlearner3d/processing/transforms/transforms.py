@@ -104,10 +104,3 @@ class StandardizeIntensityUsingDatasetStatistics:
         data._left = normalize_radiometry(data._left,nb_channel=self.channels)
         data._right = normalize_radiometry(data._right,nb_channel=self.channels)
         return data
-    
-    
-
-
-
-    
-    
