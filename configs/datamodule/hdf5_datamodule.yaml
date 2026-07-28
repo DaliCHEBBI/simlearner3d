@@ -20,6 +20,14 @@ subtile_width: 50
 subtile_overlap_train: 0
 subtile_overlap_predict: 0
 
+aug_params:
+  crop_size: [${patch_size}, ${patch_size}]   # or whatever args.image_size is, e.g. a single int or [H, W]
+  min_scale: -0.2         # args.spatial_scale[0]
+  max_scale: 0.5          # args.spatial_scale[1]
+  do_flip: true
+  yjitter: false
+
+model_type: "RAFTStereo"
 
 batch_size: 16
 num_workers: 3

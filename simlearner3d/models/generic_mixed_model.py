@@ -1,15 +1,16 @@
+from numpy import disp
 import torch
 from pytorch_lightning import LightningModule
 from torch import nn
 
-from simlearner3d.models.PSMNet.models import PSMNet
+from simlearner3d.models.RAFTStereo.core.raft_stereo import RAFTStereo
 
 import torch.nn.functional as F
 from simlearner3d.utils import utils
 
 log = utils.get_logger(__name__)
 
-MODEL_ZOO = [PSMNet]
+MODEL_ZOO = [RAFTStereo]
 
 
 def get_neural_net_class(class_name: str) -> nn.Module:
@@ -31,7 +32,7 @@ def get_neural_net_class(class_name: str) -> nn.Module:
 
 
 
-class ModelReg(LightningModule):
+class ModelMix(LightningModule):
     """Model training, validation, test.
 
     Read the Pytorch Lightning docs:
@@ -52,8 +53,6 @@ class ModelReg(LightningModule):
         # this line ensures params passed to LightningModule will be saved to ckpt
         # it also allows to access params with 'self.hparams' attribute
         self.save_hyperparameters()
-        #self.save_hyperparameters(ignore=["criterion"])
-        self.criterion = kwargs.get("criterion")
         self.model=kwargs.get("model")
         self.nanvalue=kwargs.get("value_nan")
         self.maxdisp=kwargs.get("max_disparity")
@@ -64,34 +63,61 @@ class ModelReg(LightningModule):
         neural_net_class = get_neural_net_class(kwargs.get("neural_net_class_name"))
         self.regressor = neural_net_class(**kwargs.get("neural_net_hparams"))
 
+        self.train_nb_iterrations=kwargs.get("train_nb_iterations")
+        self.validation_nb_iterrations=kwargs.get("validation_nb_iterations")
+
+
     def load_trained_assets(self, model_tar : str):
         #device="cuda"
         state_dict = torch.load(model_tar,map_location="cpu")['state_dict'] # ,map_location=device
         state_dict_new={k.replace("module.",""):v for k,v in zip(state_dict.keys(),state_dict.values())}
         self.regressor.load_state_dict(state_dict_new)
 
+
+    def sequence_loss(self, flow_preds, flow_gt, valid, loss_gamma=0.9, max_flow=700):
+        """ Loss function defined over sequence of flow predictions """
+
+        n_predictions = len(flow_preds)
+        assert n_predictions >= 1
+        flow_loss = 0.0
+
+        # exlude invalid pixels and extremely large diplacements
+        mag = torch.sum(flow_gt**2, dim=1).sqrt()
+
+        # exclude extremly large displacements
+        valid = ((valid >= 0.5) & (mag < max_flow)).unsqueeze(1)
+        assert valid.shape == flow_gt.shape, [valid.shape, flow_gt.shape]
+        assert not torch.isinf(flow_gt[valid.bool()]).any()
+
+        for i in range(n_predictions):
+            assert not torch.isnan(flow_preds[i]).any() and not torch.isinf(flow_preds[i]).any()
+            # We adjust the loss_gamma so it is consistent for any number of RAFT-Stereo iterations
+            adjusted_loss_gamma = loss_gamma**(15/(n_predictions - 1))
+            i_weight = adjusted_loss_gamma**(n_predictions - i - 1)
+            i_loss = (flow_preds[i] - flow_gt).abs()
+            assert i_loss.shape == valid.shape, [i_loss.shape, valid.shape, flow_gt.shape, flow_preds[i].shape]
+            flow_loss += i_weight * i_loss[valid.bool()].mean()
+
+        epe = torch.sum((flow_preds[-1] - flow_gt)**2, dim=1).sqrt()
+        epe = epe.view(-1)[valid.view(-1)]
+
+        metrics = {
+            'epe': epe.mean().item(),
+            '1px': (epe < 1).float().mean().item(),
+            '3px': (epe < 3).float().mean().item(),
+            '5px': (epe < 5).float().mean().item(),
+        }
+
+        return flow_loss, metrics
+
     def training_step(self,batch, batch_idx: int):
-        x0,x1,dispnoc0,_,_=batch
-        """if self.channel>1 and x0.shape[1]==1:
-            x0=x0.tile((1,self.channel,1,1))
-            x1=x1.tile((1,self.channel,1,1)) """ 
+        x0,x1,dispnoc0,valid,_=batch
 
-        dispnoc0=dispnoc0.squeeze()
-        mask = (dispnoc0 < self.maxdisp) * (dispnoc0 >= self.nanvalue) # add non defined values in case where sparse disparity
-        mask.detach_()
+        flow_preds = self.regressor(x0, x1,
+                            iters=self.train_nb_iterrations if self.training else self.validation_nb_iterrations, 
+                            test_mode=not self.training)
 
-        if self.model == 'stackhourglass':
-            output1, output2, output3 = self.regressor(x0,x1)
-            output1 = torch.squeeze(output1,1)
-            output2 = torch.squeeze(output2,1)
-            output3 = torch.squeeze(output3,1)
-            training_loss = 0.5*F.smooth_l1_loss(output1[mask], dispnoc0[mask], size_average=True) \
-                + 0.7*F.smooth_l1_loss(output2[mask], dispnoc0[mask], size_average=True) \
-                    + F.smooth_l1_loss(output3[mask], dispnoc0[mask], size_average=True) 
-        else:
-            output = self.regressor(x0,x1)
-            output = torch.squeeze(output,1)
-            training_loss = F.smooth_l1_loss(output[mask], dispnoc0[mask], size_average=True)
+        training_loss, metrics = self.sequence_loss(flow_preds, dispnoc0, valid)
 
         self.log("training_loss",
                  training_loss, 
@@ -100,91 +126,67 @@ class ModelReg(LightningModule):
                  on_step=True, 
                  on_epoch=True,
                  sync_dist=True)
+
+
+        for key, value in metrics.items():
+            self.log(f"train_{key}", value, prog_bar=True, logger=True, on_step=True, on_epoch=True, sync_dist=True)
+        
         return training_loss
 
-    def validation_step(self,batch,batch_idx: int):
-        x0,x1,dispnoc0,_,_=batch
-        """if self.channel>1 and x0.shape[1]==1:
-            x0=x0.tile((1,self.channel,1,1))
-            x1=x1.tile((1,self.channel,1,1))"""
-        
-        dispnoc0=dispnoc0.squeeze()
-        #device='cuda' if x0.is_cuda else 'cpu'
-        mask = (dispnoc0 < self.maxdisp) * (dispnoc0 >= self.nanvalue) # add non defined values in case where sparse disparity
-        mask.detach_()
+    def validation_step(self,batch, batch_idx: int):
+        x0,x1,dispnoc0,valid,_=batch
 
-        print(mask.shape)
 
-        output = self.regressor(x0,x1)
-        output = torch.squeeze(output,1)
-        validation_loss = F.smooth_l1_loss(output[mask], dispnoc0[mask], size_average=True)
+        flow_preds = self.regressor(x0, x1,
+                            iters=self.train_nb_iterrations if self.training else self.validation_nb_iterrations, 
+                            test_mode=not self.training)
 
-        self.log("val_loss",
+        validation_loss, metrics = self.sequence_loss(flow_preds, dispnoc0, valid)
+
+        self.log("validation_loss",
                  validation_loss, 
                  prog_bar=True,
                  logger=True, 
                  on_step=True, 
                  on_epoch=True,
                  sync_dist=True)
+
         
+        for key, value in metrics.items():
+            self.log(f"validation_{key}", value, prog_bar=True, logger=True, on_step=True, on_epoch=True, sync_dist=True)
+
         return validation_loss
     
-    def test_step(self,batch,batch_idx: int):
-        x0,x1,dispnoc0,_,_=batch
-        """if self.channel>1 and x0.shape[1]==1:
-            x0=x0.tile((1,self.channel,1,1))
-            x1=x1.tile((1,self.channel,1,1)) """
+    def test_step(self,batch, batch_idx: int):
+        x0,x1,dispnoc0,valid,_=batch
 
-        dispnoc0=dispnoc0.squeeze()       
-        mask = (dispnoc0 < self.maxdisp) * (dispnoc0 >= self.nanvalue) # add non defined values in case where sparse disparity
-        mask.detach_()
+        flow_preds = self.regressor(x0, x1,
+                            iters=self.train_nb_iterrations if self.training else self.validation_nb_iterrations, 
+                            test_mode=not self.training)
 
-        if x0.shape[2] % 16 != 0:
-            times = x0.shape[2]//16       
-            top_pad = (times+1)*16 -x0.shape[2]
-        else:
-            top_pad = 0
+        test_loss, metrics = self.sequence_loss(flow_preds, dispnoc0, valid)
 
-        if x0.shape[3] % 16 != 0:
-            times = x0.shape[3]//16                       
-            right_pad = (times+1)*16-x0.shape[3]
-        else:
-            right_pad = 0  
-
-        x0 = F.pad(x0,(0,right_pad, top_pad,0))
-        x1 = F.pad(x1,(0,right_pad, top_pad,0))
-
-        with torch.no_grad():
-            output3 = self.regressor(x0,x1)
-            output3 = torch.squeeze(output3)
-        
-        if top_pad !=0:
-            img = output3[:,top_pad:,:]
-        else:
-            img = output3
-
-        if len(dispnoc0[mask])==0:
-           test_loss = 0
-        else:
-           test_loss = F.l1_loss(img[mask],dispnoc0[mask])
         self.log("test_loss",
-                 test_loss.data, 
+                 test_loss, 
                  prog_bar=True,
                  logger=True, 
                  on_step=True, 
                  on_epoch=True,
                  sync_dist=True)
-        
-        return test_loss
 
+        
+        for key, value in metrics.items():
+            self.log(f"test_{key}", value, prog_bar=True, logger=True, on_step=True, on_epoch=True, sync_dist=True)
+
+        return test_loss
 
     
     def forward(self,imgL,imgR):
         #with torch.no_grad():
-        disp = self.regressor(imgL,imgR)
-        disp = torch.squeeze(disp)
-        pred_disp = disp.data.cpu().numpy()
-        return pred_disp
+        disp = self.regressor(imgL,imgR,
+                            iters=self.train_nb_iterrations if self.training else self.validation_nb_iterrations, 
+                            test_mode=not self.training)
+        return disp
     
 
     def configure_optimizers(self):

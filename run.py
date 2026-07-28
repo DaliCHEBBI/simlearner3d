@@ -5,7 +5,7 @@ from omegaconf import DictConfig, OmegaConf
 from tqdm import tqdm
 from enum import Enum
 import dotenv
-
+import torch
 
 from simlearner3d.utils import utils
 from simlearner3d.processing.dataset.hdf5 import create_hdf5
@@ -29,7 +29,7 @@ DEFAULT_ENV = ".env"
 
 log = utils.get_logger(__name__)
 
-
+torch.set_float32_matmul_precision('high')
 
 @hydra.main(config_path="configs/", config_name="config.yaml")
 def launch_train(

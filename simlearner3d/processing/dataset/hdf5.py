@@ -2,12 +2,13 @@ import copy
 import os
 import os.path as osp
 from numbers import Number
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, Dict
 
 import h5py
 import torch
 from torch.utils.data import Dataset
 from tqdm import tqdm
+from simlearner3d.models.RAFTStereo.core.utils.augmentor import FlowAugmentor
 from simlearner3d.utils import utils
 import numpy as np
 
@@ -167,6 +168,9 @@ class HDF5Dataset(Dataset):
         subtile_overlap_train: Number = 0,
         train_transform: List[Callable] = None,
         eval_transform: List[Callable] = None,
+        aug_params: Dict = None,
+        nodata_value: Number = -9999.0,
+        model_type: str = "RAFTStereo",
     ):
         """Initialization, taking care of HDF5 dataset preparation if needed, and indexation of its content.
 
@@ -198,6 +202,12 @@ class HDF5Dataset(Dataset):
 
         self.hdf5_file_path = hdf5_file_path
 
+        
+        self.augmentor = FlowAugmentor(**aug_params) if aug_params else None
+        self.nodata_value = nodata_value
+        self.model_type = model_type
+
+
         # Instantiates these to null;
         # They are loaded within __getitem__ to support multi-processing training.
         self.dataset = None
@@ -228,22 +238,70 @@ class HDF5Dataset(Dataset):
         sample_hdf5_path = self.samples_hdf5_paths[idx]
         data = self._get_data(sample_hdf5_path)
 
-        #----------------------------------------------------------------------------#
-        transform = self.train_transform
-        if sample_hdf5_path.startswith("val") or sample_hdf5_path.startswith("test"):
-            transform = self.eval_transform
-        if transform:
-            data = transform(data)
-        if data._left.ndim==2:
-            data._left=data._left.unsqueeze(0)
-        if data._right.ndim==2:
-            data._right=data._right.unsqueeze(0)
-        if data._disp.ndim==2:
-            data._disp=data._disp.unsqueeze(0)
-        if data._masq.ndim==2:    
-            data._masq=data._masq.unsqueeze(0)
-        return data._left, data._right,data._disp,data._masq,data._xupl
-        #----------------------------------------------------------------------------#
+        if self.model_type=="RAFTStereo":
+            img1 = data._left
+            img2 = data._right
+            disp = data._disp
+
+            if img1.ndim == 3:
+                img1 = img1.squeeze(0)
+            if img2.ndim == 3:
+                img2 = img2.squeeze(0)
+            if disp.ndim == 3:
+                disp = disp.squeeze(0)
+
+
+            # grayscale images
+            if len(img1.shape) == 2:
+                img1 = np.tile(img1[...,None], (1, 1, 3))
+                img2 = np.tile(img2[...,None], (1, 1, 3))
+            else:
+                img1 = img1[..., :3]
+                img2 = img2[..., :3]
+
+            if isinstance(disp, tuple):
+                disp, valid = disp
+            else:
+                # consider nodata= -9999 as invalid, and also consider any disparity with an absolute value larger than 512 as invalid (as it is out of the range of disparities seen during training, and likely to be an error in the GT).
+                valid = (disp != self.nodata_value) & (np.abs(disp) < 512)
+
+            flow = np.stack([-disp, np.zeros_like(disp)], axis=-1)
+
+            if self.augmentor is not None:
+                img1, img2, flow, valid = self.augmentor(img1, img2, flow,valid)
+
+            img1 = torch.from_numpy(img1).permute(2, 0, 1).float()
+            img2 = torch.from_numpy(img2).permute(2, 0, 1).float()
+            flow = torch.from_numpy(flow).permute(2, 0, 1).float()
+
+            # nodata of -9999 is already considered in the valid mask, so we don't need to do anything else here.
+            valid = (flow[0].abs() < 512) & (flow[1].abs() < 512) & valid
+
+            flow = flow[:1]
+            return img1, img2, flow, valid.float()
+        else:
+            data = Data(
+                _left=torch.from_numpy(data._left),
+                _right=torch.from_numpy(data._right),
+                _disp=torch.from_numpy(data._disp), 
+                _masq=torch.from_numpy(data._masq)
+            )
+            #----------------------------------------------------------------------------#
+            transform = self.train_transform
+            if sample_hdf5_path.startswith("val") or sample_hdf5_path.startswith("test"):
+                transform = self.eval_transform
+            if transform:
+                data = transform(data)
+            if data._left.ndim==2:
+                data._left=data._left.unsqueeze(0)
+            if data._right.ndim==2:
+                data._right=data._right.unsqueeze(0)
+            if data._disp.ndim==2:
+                data._disp=data._disp.unsqueeze(0)
+            if data._masq.ndim==2:    
+                data._masq=data._masq.unsqueeze(0)
+            return data._left, data._right,data._disp,data._masq,data._xupl
+            #----------------------------------------------------------------------------#
 
 
     def _get_data(self, sample_hdf5_path: str) -> Data:
@@ -262,10 +320,10 @@ class HDF5Dataset(Dataset):
         grp = self.dataset[split][basename]#[sample_hdf5_path]
 
         return Data(
-            _left=torch.from_numpy(grp["l"][...]),
-            _right=torch.from_numpy(grp["r"][...]),
-            _disp=torch.from_numpy(grp["d"][...]).mul(self.sign_disp_multiplier), # do it once for all 
-            _masq=torch.from_numpy(grp["m"][...]).div(self.masq_divider), # do it once for all
+            _left=grp["l"][...].astype(np.uint8),
+            _right=grp["r"][...].astype(np.uint8),
+            _disp=grp["d"][...] * self.sign_disp_multiplier, # do it once for all 
+            _masq=grp["m"][...] / self.masq_divider, # do it once for all
         )
     
 

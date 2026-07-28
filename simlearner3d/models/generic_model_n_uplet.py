@@ -301,11 +301,7 @@ class Model(LightningModule):
         out=self.decisionNet(ref_other)
         return out
     
-    """def configure_optimizers(self):
-        optimizer=torch.optim.AdamW(self.parameters(),lr=self.learning_rate)
-        scheduler=torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[50,100,150,200],gamma=0.7)
-        return [optimizer],[scheduler]"""
-    
+
     def configure_optimizers(self):
         """Choose what optimizers and learning-rate schedulers to use in your optimization.
 
@@ -313,16 +309,27 @@ class Model(LightningModule):
             An optimizer, or a config of a scheduler and an optimizer.
 
         """
-        #self.lr = self.hparams.lr  # aliasing for Lightning auto_find_lr
+        self.lr = self.hparams.lr  # aliasing for Lightning auto_find_lr
         optimizer = self.hparams.optimizer(
             params=filter(lambda p: p.requires_grad, self.parameters()),
-            lr=self.learning_rate,
+            lr=self.lr,
         )
         if self.hparams.lr_scheduler is None:
             return optimizer
 
-        return {
-            "optimizer": optimizer,
-            "lr_scheduler": self.hparams.lr_scheduler(optimizer),
-            "monitor": self.hparams.monitor,
-        }
+        lr_scheduler_partial = self.hparams.lr_scheduler
+        if lr_scheduler_partial.func is torch.optim.lr_scheduler.OneCycleLR:
+            # OneCycleLR needs the total number of optimizer steps and must be
+            # stepped every batch. Let Lightning compute total_steps so that
+            # steps_per_epoch/epochs do not have to be set by hand.
+            scheduler = lr_scheduler_partial(
+                optimizer, total_steps=self.trainer.estimated_stepping_batches
+            )
+            lr_scheduler_config = {"scheduler": scheduler, "interval": "step"}
+        else:
+            lr_scheduler_config = {
+                "scheduler": lr_scheduler_partial(optimizer),
+                "monitor": self.hparams.monitor,
+            }
+
+        return {"optimizer": optimizer, "lr_scheduler": lr_scheduler_config}
